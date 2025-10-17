@@ -3,7 +3,12 @@
     "allow": [
       "Bash(dir:*)",
       "Bash(npm run build:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(if [ -f .env.local ])",
+      "Bash(then echo \"Archivo .env.local existe\")",
+      "Bash(else echo \"No existe .env.local\")",
+      "Bash(fi)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []
