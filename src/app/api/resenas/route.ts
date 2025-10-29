@@ -4,6 +4,7 @@
 // GET /api/resenas?servicioId=xxx - Obtener reseñas de un servicio
 // GET /api/resenas?userId=xxx - Obtener reseñas de un usuario
 // POST /api/resenas - Crear nueva reseña
+// DELETE /api/resenas?id=xxx - Eliminar reseña
 
 import { NextRequest, NextResponse } from 'next/server';
 import { ResenaController } from '@/controllers';
@@ -44,17 +45,35 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const result = await controller.create(body);
-    
-    return NextResponse.json(result, { 
-      status: result.success ? 201 : 400 
+
+    return NextResponse.json(result, {
+      status: result.success ? 201 : 400
     });
   } catch (error) {
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Error al procesar la solicitud' 
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Error al procesar la solicitud'
       },
       { status: 500 }
     );
   }
+}
+
+export async function DELETE(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams;
+  const id = searchParams.get('id');
+
+  if (!id) {
+    return NextResponse.json(
+      { success: false, error: 'Se requiere el parámetro id' },
+      { status: 400 }
+    );
+  }
+
+  const result = await controller.delete(id);
+
+  return NextResponse.json(result, {
+    status: result.success ? 200 : 400
+  });
 }

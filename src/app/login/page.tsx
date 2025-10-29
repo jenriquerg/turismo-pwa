@@ -2,15 +2,30 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { login } from "@/lib/auth";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implementar lógica de login
-    console.log("Login attempt:", { email, password });
+    setLoading(true);
+    setError("");
+
+    const result = await login({ email, password });
+
+    if (result.success) {
+      router.push("/dashboard");
+      router.refresh();
+    } else {
+      setError(result.error || "Error al iniciar sesión");
+      setLoading(false);
+    }
   };
 
   return (
@@ -22,6 +37,13 @@ export default function LoginPage() {
             <h1 className="text-3xl font-bold text-gray-900">Iniciar Sesión</h1>
             <p className="text-gray-600">Bienvenido de vuelta</p>
           </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -76,9 +98,10 @@ export default function LoginPage() {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full bg-emerald-600 text-white py-3 rounded-lg font-medium hover:bg-emerald-700 transition-colors shadow-sm"
+              disabled={loading}
+              className="w-full bg-emerald-600 text-white py-3 rounded-lg font-medium hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Iniciar Sesión
+              {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
             </button>
           </form>
 

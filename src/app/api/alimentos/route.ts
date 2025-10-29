@@ -1,23 +1,24 @@
 // ============================================
-// API ROUTE - Alojamientos
+// API ROUTE - Alimentos
 // ============================================
-// GET /api/alojamientos - Obtener todos los alojamientos
-// GET /api/alojamientos?id=xxx - Obtener alojamiento por ID
-// POST /api/alojamientos - Crear nuevo alojamiento
-// PUT /api/alojamientos?id=xxx - Actualizar alojamiento
-// DELETE /api/alojamientos?id=xxx - Eliminar alojamiento
+// GET /api/alimentos - Obtener todos los alimentos
+// GET /api/alimentos?id=xxx - Obtener alimento por ID
+// GET /api/alimentos?disponibilidad=true - Solo disponibles
+// GET /api/alimentos?userId=xxx - Por proveedor
+// POST /api/alimentos - Crear nuevo alimento
+// PUT /api/alimentos?id=xxx - Actualizar alimento
+// DELETE /api/alimentos?id=xxx - Eliminar alimento
 
 import { NextRequest, NextResponse } from 'next/server';
-import { AlojamientoController } from '@/controllers';
+import { AlimentoController } from '@/controllers';
 
-const controller = new AlojamientoController();
+const controller = new AlimentoController();
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const id = searchParams.get('id');
-  const ubicacion = searchParams.get('ubicacion');
-  const capacidad = searchParams.get('capacidad');
-  const disponible = searchParams.get('disponible');
+  const disponibilidad = searchParams.get('disponibilidad');
+  const userId = searchParams.get('userId');
 
   // Obtener por ID
   if (id) {
@@ -27,20 +28,14 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // Buscar por ubicación
-  if (ubicacion) {
-    const result = await controller.searchByUbicacion(ubicacion);
-    return NextResponse.json(result);
-  }
-
-  // Buscar por capacidad
-  if (capacidad) {
-    const result = await controller.searchByCapacidad(parseInt(capacidad));
+  // Obtener por proveedor
+  if (userId) {
+    const result = await controller.getByProveedor(userId);
     return NextResponse.json(result);
   }
 
   // Filtrar solo disponibles
-  if (disponible === 'true') {
+  if (disponibilidad === 'true') {
     const result = await controller.getDisponibles();
     return NextResponse.json(result);
   }

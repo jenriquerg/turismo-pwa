@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { register } from "@/lib/auth";
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -11,11 +14,35 @@ export default function RegisterPage() {
     confirmPassword: "",
     userType: "turista" as "turista" | "proveedor",
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implementar lógica de registro
-    console.log("Register attempt:", formData);
+    setLoading(true);
+    setError("");
+
+    // Validar contraseñas
+    if (formData.password !== formData.confirmPassword) {
+      setError("Las contraseñas no coinciden");
+      setLoading(false);
+      return;
+    }
+
+    const result = await register({
+      email: formData.email,
+      password: formData.password,
+      name: formData.name,
+      userType: formData.userType,
+    });
+
+    if (result.success) {
+      router.push("/dashboard");
+      router.refresh();
+    } else {
+      setError(result.error || "Error al registrar usuario");
+      setLoading(false);
+    }
   };
 
   const handleChange = (
@@ -34,6 +61,13 @@ export default function RegisterPage() {
             <h1 className="text-3xl font-bold text-gray-900">Crear Cuenta</h1>
             <p className="text-gray-600">Únete a nuestra comunidad</p>
           </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -168,9 +202,10 @@ export default function RegisterPage() {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full bg-emerald-600 text-white py-3 rounded-lg font-medium hover:bg-emerald-700 transition-colors shadow-sm"
+              disabled={loading}
+              className="w-full bg-emerald-600 text-white py-3 rounded-lg font-medium hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Crear Cuenta
+              {loading ? "Creando cuenta..." : "Crear Cuenta"}
             </button>
           </form>
 

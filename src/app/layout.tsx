@@ -1,21 +1,17 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "Turismo PWA",
-  description: "Plataforma de servicios turísticos locales",
+  title: "TurismoPWA - Servicios Turísticos Locales",
+  description: "Plataforma web progresiva para conectar viajeros con servicios turísticos locales: alojamientos, alimentos y experiencias.",
   manifest: "/manifest.json",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=5",
+  themeColor: "#10B981",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "TurismoPWA",
+  },
 };
 
 export default function RootLayout({
@@ -24,10 +20,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <html lang="es">
+      <head>
+        <link rel="icon" href="/manifest.json" type="image/x-icon" />
+      </head>
+      <body className="antialiased">
         {children}
       </body>
     </html>

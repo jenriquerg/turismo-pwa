@@ -1,23 +1,29 @@
 // ============================================
-// API ROUTE - Alojamientos
+// API ROUTE - Experiencias
 // ============================================
-// GET /api/alojamientos - Obtener todos los alojamientos
-// GET /api/alojamientos?id=xxx - Obtener alojamiento por ID
-// POST /api/alojamientos - Crear nuevo alojamiento
-// PUT /api/alojamientos?id=xxx - Actualizar alojamiento
-// DELETE /api/alojamientos?id=xxx - Eliminar alojamiento
+// GET /api/experiencias - Obtener todas las experiencias
+// GET /api/experiencias?id=xxx - Obtener experiencia por ID
+// GET /api/experiencias?disponible=true - Solo disponibles
+// GET /api/experiencias?tipo=senderismo - Filtrar por tipo
+// GET /api/experiencias?ubicacion=Cali - Filtrar por ubicación
+// GET /api/experiencias?userId=xxx - Por proveedor
+// POST /api/experiencias - Crear nueva experiencia
+// PUT /api/experiencias?id=xxx - Actualizar experiencia
+// DELETE /api/experiencias?id=xxx - Eliminar experiencia
 
 import { NextRequest, NextResponse } from 'next/server';
-import { AlojamientoController } from '@/controllers';
+import { ExperienciaController } from '@/controllers';
+import { TipoExperiencia } from '@/types';
 
-const controller = new AlojamientoController();
+const controller = new ExperienciaController();
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const id = searchParams.get('id');
-  const ubicacion = searchParams.get('ubicacion');
-  const capacidad = searchParams.get('capacidad');
   const disponible = searchParams.get('disponible');
+  const tipo = searchParams.get('tipo');
+  const ubicacion = searchParams.get('ubicacion');
+  const userId = searchParams.get('userId');
 
   // Obtener por ID
   if (id) {
@@ -27,15 +33,21 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // Buscar por ubicación
-  if (ubicacion) {
-    const result = await controller.searchByUbicacion(ubicacion);
+  // Obtener por proveedor
+  if (userId) {
+    const result = await controller.getByProveedor(userId);
     return NextResponse.json(result);
   }
 
-  // Buscar por capacidad
-  if (capacidad) {
-    const result = await controller.searchByCapacidad(parseInt(capacidad));
+  // Buscar por tipo
+  if (tipo) {
+    const result = await controller.searchByTipo(tipo as TipoExperiencia);
+    return NextResponse.json(result);
+  }
+
+  // Buscar por ubicación
+  if (ubicacion) {
+    const result = await controller.searchByUbicacion(ubicacion);
     return NextResponse.json(result);
   }
 
@@ -45,7 +57,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(result);
   }
 
-  // Obtener todos
+  // Obtener todas
   const result = await controller.getAll();
   return NextResponse.json(result);
 }
