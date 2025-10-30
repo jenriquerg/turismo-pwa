@@ -5,10 +5,11 @@
 import { BaseRepository } from './BaseRepository';
 import type { Reserva } from '@/types';
 import { ReservaEstado, TipoServicio } from '@/types';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export class ReservaRepository extends BaseRepository<Reserva> {
-  constructor() {
-    super('reservas');
+  constructor(supabaseClient: SupabaseClient) {
+    super('reservas', supabaseClient);
   }
 
   /**

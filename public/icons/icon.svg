@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" fill="#10b981" rx="80"/>
+  <g transform="translate(256,256)">
+    <!-- Mountain Icon -->
+    <path d="M-120,-60 L0,-140 L120,-60 L80,80 L-80,80 Z" fill="#ffffff" opacity="0.9"/>
+    <path d="M-60,-20 L0,-80 L60,-20 L40,80 L-40,80 Z" fill="#ffffff" opacity="0.7"/>
+
+    <!-- Sun -->
+    <circle cx="-80" cy="-80" r="25" fill="#fbbf24"/>
+
+    <!-- Trees -->
+    <polygon points="-30,40 -30,80 -20,80 -20,40" fill="#059669"/>
+    <polygon points="-35,20 -25,40 -15,20" fill="#10b981"/>
+
+    <polygon points="20,50 20,80 30,80 30,50" fill="#059669"/>
+    <polygon points="15,30 25,50 35,30" fill="#10b981"/>
+  </g>
+
+  <!-- Text -->
+  <text x="256" y="400" font-family="Arial, sans-serif" font-size="80" font-weight="bold" text-anchor="middle" fill="#ffffff">
+    Turismo
+  </text>
+</svg>

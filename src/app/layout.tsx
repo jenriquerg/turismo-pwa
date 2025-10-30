@@ -1,17 +1,22 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "TurismoPWA - Servicios Turísticos Locales",
-  description: "Plataforma web progresiva para conectar viajeros con servicios turísticos locales: alojamientos, alimentos y experiencias.",
+  title: "La Perversoapp - Servicios Turísticos",
+  description: "La Perversoapp es tu plataforma web progresiva para conectar viajeros con servicios turísticos locales: alojamientos, alimentos y experiencias únicas.",
   manifest: "/manifest.json",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=5",
-  themeColor: "#10B981",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "TurismoPWA",
+    title: "La Perversoapp",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: "#10B981",
 };
 
 export default function RootLayout({

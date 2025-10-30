@@ -6,12 +6,13 @@ import { ReservaRepository } from '@/repositories/ReservaRepository';
 import { ReservaFactory } from '@/factories/ReservaFactory';
 import type { CrearReservaDTO, Reserva, ApiResponse } from '@/types';
 import { ReservaEstado } from '@/types';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export class ReservaController {
   private repository: ReservaRepository;
 
-  constructor() {
-    this.repository = new ReservaRepository();
+  constructor(supabaseClient: SupabaseClient) {
+    this.repository = new ReservaRepository(supabaseClient);
   }
 
   /**

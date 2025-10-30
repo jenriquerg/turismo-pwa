@@ -4,12 +4,13 @@
 
 import { ResenaRepository } from '@/repositories/ResenaRepository';
 import type { CrearResenaDTO, Resena, ApiResponse } from '@/types';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export class ResenaController {
   private repository: ResenaRepository;
 
-  constructor() {
-    this.repository = new ResenaRepository();
+  constructor(supabaseClient: SupabaseClient) {
+    this.repository = new ResenaRepository(supabaseClient);
   }
 
   /**

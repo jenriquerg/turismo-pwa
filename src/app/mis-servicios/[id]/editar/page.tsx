@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/common/Header";
 import Footer from "@/components/common/Footer";
@@ -12,7 +12,8 @@ import type { Alojamiento, Alimento, Experiencia } from "@/types";
 type ServiceType = "alojamiento" | "alimento" | "experiencia";
 type ServiceData = Alojamiento | Alimento | Experiencia;
 
-export default function EditarServicioPage({ params }: { params: { id: string } }) {
+export default function EditarServicioPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
   const [user, setUser] = useState<{ id: string; email?: string; user_metadata?: { name?: string; user_type?: string } } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,7 +42,7 @@ export default function EditarServicioPage({ params }: { params: { id: string } 
       // Intentar cargar el servicio desde cada endpoint
       try {
         // Intentar alojamiento
-        let res = await fetch(`/api/alojamientos?id=${params.id}`);
+        let res = await fetch(`/api/alojamientos?id=${id}`);
         let data = await res.json();
 
         if (data.success && data.data) {
@@ -52,7 +53,7 @@ export default function EditarServicioPage({ params }: { params: { id: string } 
         }
 
         // Intentar alimento
-        res = await fetch(`/api/alimentos?id=${params.id}`);
+        res = await fetch(`/api/alimentos?id=${id}`);
         data = await res.json();
 
         if (data.success && data.data) {
@@ -63,7 +64,7 @@ export default function EditarServicioPage({ params }: { params: { id: string } 
         }
 
         // Intentar experiencia
-        res = await fetch(`/api/experiencias?id=${params.id}`);
+        res = await fetch(`/api/experiencias?id=${id}`);
         data = await res.json();
 
         if (data.success && data.data) {
@@ -84,7 +85,7 @@ export default function EditarServicioPage({ params }: { params: { id: string } 
     }
 
     loadData();
-  }, [params.id, router]);
+  }, [id, router]);
 
   const handleSubmit = async (data: Record<string, unknown>) => {
     if (!user || !serviceType) return;
@@ -99,7 +100,7 @@ export default function EditarServicioPage({ params }: { params: { id: string } 
           ? "alimentos"
           : "experiencias";
 
-      const response = await fetch(`/api/${endpoint}?id=${params.id}`, {
+      const response = await fetch(`/api/${endpoint}?id=${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -137,7 +138,7 @@ export default function EditarServicioPage({ params }: { params: { id: string } 
           ? "alimentos"
           : "experiencias";
 
-      const response = await fetch(`/api/${endpoint}?id=${params.id}`, {
+      const response = await fetch(`/api/${endpoint}?id=${id}`, {
         method: "DELETE",
       });
 

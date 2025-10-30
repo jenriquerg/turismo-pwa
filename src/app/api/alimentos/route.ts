@@ -11,10 +11,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { AlimentoController } from '@/controllers';
-
-const controller = new AlimentoController();
+import { createSupabaseServerClient } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
+  const supabase = await createSupabaseServerClient();
+  const controller = new AlimentoController(supabase);
   const searchParams = request.nextUrl.searchParams;
   const id = searchParams.get('id');
   const disponibilidad = searchParams.get('disponibilidad');
@@ -47,6 +48,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createSupabaseServerClient();
+    const controller = new AlimentoController(supabase);
+
     const body = await request.json();
     const result = await controller.create(body);
 
@@ -66,6 +70,9 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const supabase = await createSupabaseServerClient();
+    const controller = new AlimentoController(supabase);
+
     const searchParams = request.nextUrl.searchParams;
     const id = searchParams.get('id');
 
@@ -94,6 +101,9 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const supabase = await createSupabaseServerClient();
+  const controller = new AlimentoController(supabase);
+
   const searchParams = request.nextUrl.searchParams;
   const id = searchParams.get('id');
 

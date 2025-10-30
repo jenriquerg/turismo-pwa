@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Header from "@/components/common/Header";
@@ -12,7 +12,8 @@ import ResenaForm, { type ResenaFormData } from "@/components/forms/ResenaForm";
 import { getCurrentUser } from "@/lib/auth";
 import type { Alojamiento, Resena } from "@/types";
 
-export default function AlojamientoDetailPage({ params }: { params: { id: string } }) {
+export default function AlojamientoDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
   const [alojamiento, setAlojamiento] = useState<Alojamiento | null>(null);
   const [resenas, setResenas] = useState<Resena[]>([]);
@@ -29,8 +30,8 @@ export default function AlojamientoDetailPage({ params }: { params: { id: string
 
       try {
         const [alojamientoRes, resenasRes] = await Promise.all([
-          fetch(`/api/alojamientos?id=${params.id}`),
-          fetch(`/api/resenas?servicioId=${params.id}`),
+          fetch(`/api/alojamientos?id=${id}`),
+          fetch(`/api/resenas?servicioId=${id}`),
         ]);
 
         const alojamientoData = await alojamientoRes.json();
@@ -51,7 +52,7 @@ export default function AlojamientoDetailPage({ params }: { params: { id: string
     }
 
     loadData();
-  }, [params.id]);
+  }, [id]);
 
   const handleReserva = async (data: ReservaFormData) => {
     if (!user) {
@@ -67,7 +68,7 @@ export default function AlojamientoDetailPage({ params }: { params: { id: string
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           tipo_servicio: "alojamiento",
-          servicio_id: params.id,
+          servicio_id: id,
           user_id: user.id,
           fecha_inicio: data.fecha_inicio,
           fecha_fin: data.fecha_fin,
@@ -110,7 +111,7 @@ export default function AlojamientoDetailPage({ params }: { params: { id: string
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          servicio_id: params.id,
+          servicio_id: id,
           tipo_servicio: "alojamiento",
           user_id: user.id,
           calificacion: data.calificacion,
@@ -124,7 +125,7 @@ export default function AlojamientoDetailPage({ params }: { params: { id: string
         alert("¡Reseña publicada exitosamente!");
         setShowResenaForm(false);
         // Recargar reseñas
-        const resenasRes = await fetch(`/api/resenas?servicioId=${params.id}`);
+        const resenasRes = await fetch(`/api/resenas?servicioId=${id}`);
         const resenasData = await resenasRes.json();
         if (resenasData.success) {
           setResenas(resenasData.data);

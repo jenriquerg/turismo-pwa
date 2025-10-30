@@ -1,14 +1,14 @@
 // Clase base para todos los Repositories (CRUD genérico)
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
+
 export abstract class BaseRepository<T> {
   protected supabase: SupabaseClient;
   protected tableName: string;
 
-  constructor(tableName: string, supabaseClient?: SupabaseClient) {
+  constructor(tableName: string, supabaseClient: SupabaseClient) {
     this.tableName = tableName;
-    this.supabase = supabaseClient || supabase;
+    this.supabase = supabaseClient;
   }
 
   async findAll(): Promise<T[]> {

@@ -1,6 +1,6 @@
-# 🏝️ TurismoPWA
+# 🏝️ La Perversoapp
 
-Plataforma web progresiva para la gestión de servicios turísticos en Colombia.
+Plataforma web progresiva para la gestión de servicios turísticos en Colombia - La Perversoapp.
 
 ## 🚀 Inicio Rápido
 

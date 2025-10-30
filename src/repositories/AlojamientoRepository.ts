@@ -4,10 +4,11 @@
 
 import { BaseRepository } from './BaseRepository';
 import type { Alojamiento } from '@/types';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export class AlojamientoRepository extends BaseRepository<Alojamiento> {
-  constructor() {
-    super('alojamientos');
+  constructor(supabaseClient: SupabaseClient) {
+    super('alojamientos', supabaseClient);
   }
 
   /**

@@ -6,12 +6,13 @@
 import { AlojamientoRepository } from '@/repositories/AlojamientoRepository';
 import { ServicioTuristicoFactory } from '@/factories/ServicioTuristicoFactory';
 import type { CrearAlojamientoDTO, ActualizarAlojamientoDTO, Alojamiento, ApiResponse } from '@/types';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export class AlojamientoController {
   private repository: AlojamientoRepository;
 
-  constructor() {
-    this.repository = new AlojamientoRepository();
+  constructor(supabaseClient: SupabaseClient) {
+    this.repository = new AlojamientoRepository(supabaseClient);
   }
 
   /**

@@ -5,12 +5,13 @@
 
 import { ExperienciaRepository } from '@/repositories';
 import type { CrearExperienciaDTO, ActualizarExperienciaDTO, ApiResponse, Experiencia, TipoExperiencia } from '@/types';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export class ExperienciaController {
   private repository: ExperienciaRepository;
 
-  constructor() {
-    this.repository = new ExperienciaRepository();
+  constructor(supabaseClient: SupabaseClient) {
+    this.repository = new ExperienciaRepository(supabaseClient);
   }
 
   // Obtener todas las experiencias

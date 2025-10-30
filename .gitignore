@@ -50,3 +50,5 @@ next-env.d.ts
 **/public/worker-*.js
 **/public/sw.js
 **/public/fallback-*.js
+
+.claude

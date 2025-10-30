@@ -4,10 +4,11 @@
 
 import { BaseRepository } from './BaseRepository';
 import type { Alimento } from '@/types';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export class AlimentoRepository extends BaseRepository<Alimento> {
-  constructor() {
-    super('alimentos');
+  constructor(supabaseClient: SupabaseClient) {
+    super('alimentos', supabaseClient);
   }
 
   /**

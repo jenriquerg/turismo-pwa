@@ -8,10 +8,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { ResenaController } from '@/controllers';
-
-const controller = new ResenaController();
+import { createSupabaseServerClient } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
+  const supabase = await createSupabaseServerClient();
+  const controller = new ResenaController(supabase);
   const searchParams = request.nextUrl.searchParams;
   const servicioId = searchParams.get('servicioId');
   const userId = searchParams.get('userId');
@@ -43,6 +44,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createSupabaseServerClient();
+    const controller = new ResenaController(supabase);
+
     const body = await request.json();
     const result = await controller.create(body);
 
@@ -61,6 +65,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const supabase = await createSupabaseServerClient();
+  const controller = new ResenaController(supabase);
+
   const searchParams = request.nextUrl.searchParams;
   const id = searchParams.get('id');
 

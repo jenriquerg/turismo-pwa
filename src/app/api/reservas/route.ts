@@ -9,10 +9,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { ReservaController } from '@/controllers';
-
-const controller = new ReservaController();
+import { createSupabaseServerClient } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
+  const supabase = await createSupabaseServerClient();
+  const controller = new ReservaController(supabase);
+
   const searchParams = request.nextUrl.searchParams;
   const id = searchParams.get('id');
   const userId = searchParams.get('userId');
@@ -46,6 +48,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createSupabaseServerClient();
+    const controller = new ReservaController(supabase);
+
     const body = await request.json();
     const result = await controller.create(body);
 
@@ -65,6 +70,9 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    const supabase = await createSupabaseServerClient();
+    const controller = new ReservaController(supabase);
+
     const searchParams = request.nextUrl.searchParams;
     const id = searchParams.get('id');
 
@@ -100,6 +108,9 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const supabase = await createSupabaseServerClient();
+  const controller = new ReservaController(supabase);
+
   const searchParams = request.nextUrl.searchParams;
   const id = searchParams.get('id');
 

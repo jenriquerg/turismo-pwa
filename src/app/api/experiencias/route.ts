@@ -14,10 +14,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ExperienciaController } from '@/controllers';
 import { TipoExperiencia } from '@/types';
-
-const controller = new ExperienciaController();
+import { createSupabaseServerClient } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
+  const supabase = await createSupabaseServerClient();
+  const controller = new ExperienciaController(supabase);
   const searchParams = request.nextUrl.searchParams;
   const id = searchParams.get('id');
   const disponible = searchParams.get('disponible');
@@ -64,6 +65,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createSupabaseServerClient();
+    const controller = new ExperienciaController(supabase);
+
     const body = await request.json();
     const result = await controller.create(body);
 
@@ -83,6 +87,9 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const supabase = await createSupabaseServerClient();
+    const controller = new ExperienciaController(supabase);
+
     const searchParams = request.nextUrl.searchParams;
     const id = searchParams.get('id');
 
@@ -111,6 +118,9 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const supabase = await createSupabaseServerClient();
+  const controller = new ExperienciaController(supabase);
+
   const searchParams = request.nextUrl.searchParams;
   const id = searchParams.get('id');
 

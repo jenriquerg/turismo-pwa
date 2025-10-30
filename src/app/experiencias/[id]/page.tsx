@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Header from "@/components/common/Header";
@@ -12,7 +12,8 @@ import ResenaForm, { type ResenaFormData } from "@/components/forms/ResenaForm";
 import { getCurrentUser } from "@/lib/auth";
 import type { Experiencia, Resena } from "@/types";
 
-export default function ExperienciaDetailPage({ params }: { params: { id: string } }) {
+export default function ExperienciaDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
   const [experiencia, setExperiencia] = useState<Experiencia | null>(null);
   const [resenas, setResenas] = useState<Resena[]>([]);
@@ -29,8 +30,8 @@ export default function ExperienciaDetailPage({ params }: { params: { id: string
 
       try {
         const [experienciaRes, resenasRes] = await Promise.all([
-          fetch(`/api/experiencias?id=${params.id}`),
-          fetch(`/api/resenas?servicioId=${params.id}`),
+          fetch(`/api/experiencias?id=${id}`),
+          fetch(`/api/resenas?servicioId=${id}`),
         ]);
 
         const experienciaData = await experienciaRes.json();
@@ -51,7 +52,7 @@ export default function ExperienciaDetailPage({ params }: { params: { id: string
     }
 
     loadData();
-  }, [params.id]);
+  }, [id]);
 
   const handleReserva = async (data: ReservaFormData) => {
     if (!user) {
@@ -72,7 +73,7 @@ export default function ExperienciaDetailPage({ params }: { params: { id: string
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           tipo_servicio: "experiencia",
-          servicio_id: params.id,
+          servicio_id: id,
           user_id: user.id,
           fecha_inicio: data.fecha_inicio,
           fecha_fin: null, // Experiencias no tienen fecha_fin
@@ -110,7 +111,7 @@ export default function ExperienciaDetailPage({ params }: { params: { id: string
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          servicio_id: params.id,
+          servicio_id: id,
           tipo_servicio: "experiencia",
           user_id: user.id,
           calificacion: data.calificacion,
@@ -124,7 +125,7 @@ export default function ExperienciaDetailPage({ params }: { params: { id: string
         alert("¡Reseña publicada exitosamente!");
         setShowResenaForm(false);
         // Recargar reseñas
-        const resenasRes = await fetch(`/api/resenas?servicioId=${params.id}`);
+        const resenasRes = await fetch(`/api/resenas?servicioId=${id}`);
         const resenasData = await resenasRes.json();
         if (resenasData.success) {
           setResenas(resenasData.data);

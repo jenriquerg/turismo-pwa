@@ -9,7 +9,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Acerca de */}
           <div>
-            <h3 className="text-white text-lg font-semibold mb-4">TurismoPWA</h3>
+            <h3 className="text-white text-lg font-semibold mb-4">La Perversoapp</h3>
             <p className="text-sm text-gray-400">
               Conectando viajeros con servicios turísticos locales de forma
               sencilla y confiable.
@@ -66,8 +66,8 @@ export default function Footer() {
             <ul className="space-y-2">
               <li className="text-sm">
                 <span className="text-gray-400">Email:</span>
-                <a href="mailto:info@turismopwa.com" className="ml-1 hover:text-emerald-400 transition-colors">
-                  info@turismopwa.com
+                <a href="mailto:info@laperversoapp.com" className="ml-1 hover:text-emerald-400 transition-colors">
+                  info@laperversoapp.com
                 </a>
               </li>
               <li className="text-sm">
@@ -82,7 +82,7 @@ export default function Footer() {
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center">
           <p className="text-sm text-gray-400">
-            &copy; {currentYear} TurismoPWA. Todos los derechos reservados.
+            &copy; {currentYear} La Perversoapp. Todos los derechos reservados.
           </p>
           <p className="text-xs text-gray-500 mt-2">
             Desarrollado por José Ángel, Lizet Jazmín y Jesús Enrique

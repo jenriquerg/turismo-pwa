@@ -5,10 +5,11 @@
 import { BaseRepository } from './BaseRepository';
 import type { Experiencia } from '@/types';
 import { TipoExperiencia } from '@/types';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export class ExperienciaRepository extends BaseRepository<Experiencia> {
-  constructor() {
-    super('experiencias');
+  constructor(supabaseClient: SupabaseClient) {
+    super('experiencias', supabaseClient);
   }
 
   /**

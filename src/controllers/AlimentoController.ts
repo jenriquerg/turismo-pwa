@@ -5,12 +5,13 @@
 
 import { AlimentoRepository } from '@/repositories';
 import type { CrearAlimentoDTO, ActualizarAlimentoDTO, ApiResponse, Alimento } from '@/types';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export class AlimentoController {
   private repository: AlimentoRepository;
 
-  constructor() {
-    this.repository = new AlimentoRepository();
+  constructor(supabaseClient: SupabaseClient) {
+    this.repository = new AlimentoRepository(supabaseClient);
   }
 
   // Obtener todos los alimentos
