@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  output: 'standalone',
+  // Solo usar standalone para Docker (no en Vercel)
+  ...(process.env.VERCEL ? {} : { output: 'standalone' }),
   images: {
     remotePatterns: [
       {
