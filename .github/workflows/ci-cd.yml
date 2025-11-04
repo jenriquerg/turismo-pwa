@@ -1,0 +1,112 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix={{branch}}-
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Crear directorio si no existe
+            mkdir -p ~/apps/turismo-pwa
+            cd ~/apps/turismo-pwa
+
+            # Login a GitHub Container Registry
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # Descargar docker-compose.yml y nginx.conf desde el repositorio
+            curl -o docker-compose.yml https://raw.githubusercontent.com/${{ github.repository }}/main/docker-compose.yml
+            curl -o nginx.conf https://raw.githubusercontent.com/${{ github.repository }}/main/nginx.conf
+
+            # Exportar variable para docker-compose
+            export GITHUB_REPOSITORY=${{ github.repository }}
+
+            # Detener contenedores existentes
+            docker compose down || true
+
+            # Pull de la nueva imagen
+            docker compose pull
+
+            # Iniciar contenedores
+            docker compose up -d
+
+            # Limpiar imágenes antiguas
+            docker image prune -af
+
+            # Verificar estado
+            docker compose ps
+
+      - name: Health Check
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Esperar 15 segundos a que la app inicie
+            sleep 15
+
+            # Verificar que nginx responde
+            curl -f http://localhost/health || exit 1
+
+            echo "Despliegue exitoso!"

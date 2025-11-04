@@ -2,22 +2,13 @@ version: '3.8'
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        # Variables de entorno necesarias en BUILD TIME
-        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
-    image: turismo-pwa:latest
+    image: ghcr.io/${GITHUB_REPOSITORY}:latest
     container_name: turismo-pwa-app
     restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      # Las variables NEXT_PUBLIC_* ya están embebidas en el build
-      # Solo ponemos aquí variables de runtime si las hubiera
     networks:
       - app-network
 
