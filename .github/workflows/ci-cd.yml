@@ -60,6 +60,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Copy files to VPS
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "docker-compose.yml,nginx.conf"
+          target: ~/apps/turismo-pwa
+          strip_components: 0
+
       - name: Deploy to VPS
         uses: appleboy/ssh-action@master
         with:
@@ -67,16 +77,11 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Crear directorio si no existe
-            mkdir -p ~/apps/turismo-pwa
+            # Ir al directorio de la app
             cd ~/apps/turismo-pwa
 
             # Login a GitHub Container Registry
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-            # Descargar docker-compose.yml y nginx.conf desde el repositorio
-            curl -o docker-compose.yml https://raw.githubusercontent.com/${{ github.repository }}/main/docker-compose.yml
-            curl -o nginx.conf https://raw.githubusercontent.com/${{ github.repository }}/main/nginx.conf
 
             # Exportar variable para docker-compose
             export GITHUB_REPOSITORY=${{ github.repository }}
