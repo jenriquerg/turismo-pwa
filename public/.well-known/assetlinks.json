@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.vercel.turismo_pwa_kts6.twa",
+      "sha256_cert_fingerprints": [
+        "B2:72:D5:F6:D3:FF:F2:14:AA:51:62:71:85:22:71:0B:3C:70:DF:53:F9:B7:52:A0:D0:79:A1:05:B4:86:CB:2D"
+      ]
+    }
+  }
+]
