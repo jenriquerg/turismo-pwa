@@ -48,12 +48,12 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="#" className="text-sm hover:text-emerald-400 transition-colors">
+                <Link href="/terminos" className="text-sm hover:text-emerald-400 transition-colors">
                   Términos y Condiciones
                 </Link>
               </li>
               <li>
-                <Link href="#" className="text-sm hover:text-emerald-400 transition-colors">
+                <Link href="/politicas" className="text-sm hover:text-emerald-400 transition-colors">
                   Política de Privacidad
                 </Link>
               </li>

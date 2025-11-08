@@ -181,21 +181,23 @@ export default function RegisterPage() {
                 className="mt-1 w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
                 required
               />
-              <label htmlFor="terms" className="text-sm text-gray-600">
-                Acepto los{" "}
-                <button
-                  type="button"
-                  className="text-emerald-600 hover:text-emerald-700 font-medium"
-                >
-                  términos y condiciones
-                </button>{" "}
-                y la{" "}
-                <button
-                  type="button"
-                  className="text-emerald-600 hover:text-emerald-700 font-medium"
-                >
-                  política de privacidad
-                </button>
+                <label htmlFor="terms" className="text-sm text-gray-600">
+                    Acepto los{" "}
+                    <Link
+                        href="/terminos"
+                        className="text-emerald-600 hover:text-emerald-700 font-medium"
+                        target="_blank"
+                    >
+                        términos y condiciones
+                    </Link>{" "}
+                    y la{" "}
+                    <Link
+                        href="/politicas"
+                        className="text-emerald-600 hover:text-emerald-700 font-medium"
+                        target="_blank"
+                    >
+                        política de privacidad
+                    </Link>
               </label>
             </div>
 
