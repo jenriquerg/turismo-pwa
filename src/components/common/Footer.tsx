@@ -43,7 +43,7 @@ export default function Footer() {
             <h3 className="text-white text-lg font-semibold mb-4">Soporte</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="#" className="text-sm hover:text-emerald-400 transition-colors">
+                <Link href="/ayuda" className="text-sm hover:text-emerald-400 transition-colors">
                   Centro de Ayuda
                 </Link>
               </li>
