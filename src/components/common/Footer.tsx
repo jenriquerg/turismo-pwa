@@ -66,8 +66,8 @@ export default function Footer() {
             <ul className="space-y-2">
               <li className="text-sm">
                 <span className="text-gray-400">Email:</span>
-                <a href="mailto:info@laperversoapp.com" className="ml-1 hover:text-emerald-400 transition-colors">
-                  info@laperversoapp.com
+                <a href="mailto:pruebasturiexpress@gmail.com" className="ml-1 hover:text-emerald-400 transition-colors">
+                    pruebasturiexpress@gmail.com
                 </a>
               </li>
               <li className="text-sm">
