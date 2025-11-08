@@ -1,6 +1,6 @@
-# 🏝️ La Perversoapp
+# 🏝️ TuriExpress
 
-Plataforma web progresiva para la gestión de servicios turísticos en Colombia - La Perversoapp.
+Plataforma web progresiva para la gestión de servicios turísticos en Colombia - TuriExpress.
 
 ## 🚀 Inicio Rápido
 

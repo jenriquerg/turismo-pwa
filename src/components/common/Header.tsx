@@ -36,7 +36,7 @@ export default function Header() {
           {/* Logo */}
           <Link href="/dashboard" className="flex items-center space-x-2">
             <span className="text-2xl">🏝️</span>
-            <span className="text-xl font-bold text-emerald-600">La Perversoapp</span>
+            <span className="text-xl font-bold text-emerald-600">TuriExpress</span>
           </Link>
 
           {/* Desktop Navigation */}

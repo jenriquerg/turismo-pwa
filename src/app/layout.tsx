@@ -2,13 +2,13 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "La Perversoapp - Servicios Turísticos",
-  description: "La Perversoapp es tu plataforma web progresiva para conectar viajeros con servicios turísticos locales: alojamientos, alimentos y experiencias únicas.",
+  title: "TuriExpress - Servicios Turísticos",
+  description: "TuriExpress es tu plataforma web progresiva para conectar viajeros con servicios turísticos locales: alojamientos, alimentos y experiencias únicas.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "La Perversoapp",
+    title: "TuriExpress",
   },
 };
 

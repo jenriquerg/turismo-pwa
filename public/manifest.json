@@ -1,7 +1,7 @@
 {
-  "name": "La Perversoapp - Servicios Turísticos",
-  "short_name": "Perversoapp",
-  "description": "La Perversoapp - Tu plataforma para reservar alojamientos, comida y experiencias turísticas",
+  "name": "TuriExpress - Servicios Turísticos",
+  "short_name": "TuriExpress",
+  "description": "TuriExpress - Tu plataforma para reservar alojamientos, comida y experiencias turísticas",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
