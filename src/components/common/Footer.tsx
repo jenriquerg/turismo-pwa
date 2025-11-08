@@ -73,7 +73,7 @@ export default function Footer() {
               <li className="text-sm">
                 <span className="text-gray-400">Teléfono:</span>
                 <a href="tel:+573001234567" className="ml-1 hover:text-emerald-400 transition-colors">
-                  +57 300 123 4567
+                  +44 2751 4220
                 </a>
               </li>
             </ul>
