@@ -52,3 +52,5 @@ next-env.d.ts
 **/public/fallback-*.js
 
 .claude
+
+.idea
