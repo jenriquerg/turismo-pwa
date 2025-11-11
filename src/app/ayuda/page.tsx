@@ -36,8 +36,8 @@ export default function DeleteAccountPage() {
                                 <ol className="list-decimal list-inside space-y-2 ml-4 text-gray-700">
                                     <li>Abre la aplicación TuriExpress</li>
                                     <li>Ve a tu perfil</li>
-                                    <li>Selecciona "Configuración de cuenta"</li>
-                                    <li>Pulsa en "Eliminar mi cuenta" al final de la página</li>
+                                    <li>Selecciona (Configuración de cuenta)</li>
+                                    <li>Pulsa en (Eliminar mi cuenta) al final de la página</li>
                                     <li>Confirma tu decisión</li>
                                 </ol>
                             </div>
