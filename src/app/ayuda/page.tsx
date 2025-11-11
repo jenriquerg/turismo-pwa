@@ -57,7 +57,7 @@ export default function DeleteAccountPage() {
                                     con:
                                 </p>
                                 <ul className="list-disc list-inside space-y-2 ml-4 text-gray-700">
-                                    <li>Asunto: "Solicitud de eliminación de cuenta"</li>
+                                    <li>Asunto: Solicitud de eliminación de cuenta</li>
                                     <li>Tu correo electrónico registrado en TuriExpress</li>
                                     <li>Confirmación de que deseas eliminar tu cuenta</li>
                                 </ul>
