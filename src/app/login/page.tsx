@@ -133,6 +133,7 @@ export default function LoginPage() {
               className="inline-block text-sm text-gray-500 hover:text-gray-700"
             >
               ← Volver al inicio
+
             </Link>
           </div>
         </div>
