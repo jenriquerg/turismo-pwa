@@ -1,0 +1,247 @@
+name: Blue-Green Deployment Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Job 1: Build y Push 
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=v-
+            type=ref,event=pr
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
+  # Job 2: Determinar Entorno Inactivo
+  determine-target:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    outputs:
+      target-env: ${{ steps.check.outputs.target }}
+      current-env: ${{ steps.check.outputs.current }}
+
+    steps:
+      - name: Check current active environment
+        id: check
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/apps/turismo-pwa
+
+            # Leer entorno activo (default: blue)
+            ACTIVE_ENV=$(grep ACTIVE_ENV .env | cut -d'=' -f2 || echo "blue")
+
+            # Determinar target (invertir)
+            if [ "$ACTIVE_ENV" = "blue" ]; then
+              TARGET_ENV="green"
+            else
+              TARGET_ENV="blue"
+            fi
+
+            echo "target=$TARGET_ENV" >> $GITHUB_OUTPUT
+            echo "current=$ACTIVE_ENV" >> $GITHUB_OUTPUT
+
+            echo "Current active: $ACTIVE_ENV"
+            echo "Deploy target: $TARGET_ENV"
+
+  # Job 3: Deploy a Entorno Inactivo
+  deploy-to-inactive:
+    needs: [build-and-push, determine-target]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Copy deployment files to VPS
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "docker-compose.yml,nginx.conf,nginx-upstream.conf,scripts/"
+          target: ~/apps/turismo-pwa/
+          strip_components: 0
+
+      - name: Deploy to ${{ needs.determine-target.outputs.target-env }} environment
+        uses: appleboy/ssh-action@master
+        env:
+          TARGET_ENV: ${{ needs.determine-target.outputs.target-env }}
+          IMAGE_TAG: ${{ needs.build-and-push.outputs.image-tag }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: TARGET_ENV,IMAGE_TAG
+          script: |
+            cd ~/apps/turismo-pwa
+
+            # Login a registry
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # Exportar variables
+            export GITHUB_REPOSITORY=${{ github.repository }}
+
+            # Actualizar tag del entorno target
+            if [ "$TARGET_ENV" = "blue" ]; then
+              export BLUE_TAG=$IMAGE_TAG
+              export GREEN_TAG=$(grep GREEN_TAG .env | cut -d'=' -f2 || echo "latest")
+            else
+              export BLUE_TAG=$(grep BLUE_TAG .env | cut -d'=' -f2 || echo "latest")
+              export GREEN_TAG=$IMAGE_TAG
+            fi
+
+            echo "BLUE_TAG=$BLUE_TAG" > .env
+            echo "GREEN_TAG=$GREEN_TAG" >> .env
+            echo "ACTIVE_ENV=$(grep ACTIVE_ENV .env | cut -d'=' -f2 || echo 'blue')" >> .env
+
+            # Pull nueva imagen solo para el target
+            docker compose pull app-$TARGET_ENV
+
+            # Restart solo el contenedor target (sin afectar el activo)
+            docker compose up -d app-$TARGET_ENV
+
+            echo "Deployed to $TARGET_ENV environment"
+
+  # Job 4: Tests en Entorno Inactivo
+  test-inactive-environment:
+    needs: [deploy-to-inactive, determine-target]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Run health checks on ${{ needs.determine-target.outputs.target-env }}
+        uses: appleboy/ssh-action@master
+        env:
+          TARGET_ENV: ${{ needs.determine-target.outputs.target-env }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: TARGET_ENV
+          script: |
+            cd ~/apps/turismo-pwa
+
+            # Determinar puerto del target
+            if [ "$TARGET_ENV" = "blue" ]; then
+              TARGET_PORT=3001
+            else
+              TARGET_PORT=3002
+            fi
+
+            echo "Testing $TARGET_ENV on port $TARGET_PORT..."
+
+            # Esperar que el contenedor esté ready
+            sleep 20
+
+            # Health check directo al contenedor
+            HEALTH=$(curl -f http://localhost:$TARGET_PORT/health || echo "FAIL")
+
+            if [ "$HEALTH" != "FAIL" ]; then
+              echo "Health check passed"
+            else
+              echo "Health check failed"
+              exit 1
+            fi
+
+            # Test adicional: verificar que Next.js responde
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$TARGET_PORT/)
+
+            if [ "$HTTP_CODE" -eq 200 ]; then
+              echo "HTTP response OK (200)"
+            else
+              echo "HTTP response: $HTTP_CODE"
+              exit 1
+            fi
+
+            echo "All tests passed on $TARGET_ENV!"
+
+  # Job 5: Switch de Tráfico (Manual Approval)
+  switch-traffic:
+    needs: [test-inactive-environment, determine-target]
+    runs-on: ubuntu-latest
+    environment: production  # Requiere aprobación manual
+
+    steps:
+      - name: Switch traffic to ${{ needs.determine-target.outputs.target-env }}
+        uses: appleboy/ssh-action@master
+        env:
+          TARGET_ENV: ${{ needs.determine-target.outputs.target-env }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: TARGET_ENV
+          script: |
+            cd ~/apps/turismo-pwa
+            chmod +x scripts/switch-traffic.sh
+            ./scripts/switch-traffic.sh $TARGET_ENV
+
+            echo "Traffic switched to $TARGET_ENV!"
+            echo "Deployment complete!"
+
+  # Job 6: Cleanup
+  cleanup:
+    needs: [switch-traffic, determine-target]
+    runs-on: ubuntu-latest
+    if: success()
+
+    steps:
+      - name: Cleanup old images
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/apps/turismo-pwa
+            docker image prune -af
+            echo "Cleanup complete"
