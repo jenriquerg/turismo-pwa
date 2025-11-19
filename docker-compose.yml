@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Blue environment (puerto interno 3000, expuesto en 3001)
   app-blue:

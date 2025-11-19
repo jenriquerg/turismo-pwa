@@ -187,11 +187,22 @@ jobs:
             echo "Generated .env file:"
             cat .env
 
+            # Exportar variables para docker-compose
+            export BLUE_TAG="${BLUE_TAG}"
+            export GREEN_TAG="${GREEN_TAG}"
+            export ACTIVE_ENV="${CURRENT_ACTIVE_ENV}"
+            export GITHUB_REPOSITORY="${GITHUB_REPOSITORY}"
+
             # Pull nueva imagen solo para el target
+            echo "Pulling image for $TARGET_ENV..."
             docker compose pull app-$TARGET_ENV
 
             # Restart solo el contenedor target (sin afectar el activo)
+            echo "Starting $TARGET_ENV container..."
             docker compose up -d app-$TARGET_ENV
+
+            # Verificar estado
+            docker compose ps app-$TARGET_ENV
 
             echo "Deployed to $TARGET_ENV environment"
 
@@ -228,12 +239,16 @@ jobs:
             sleep 30
 
             # Verificar que el contenedor está corriendo
-            if ! docker compose ps | grep -q "$CONTAINER_NAME.*running"; then
-              echo "Error: Container $CONTAINER_NAME is not running"
+            CONTAINER_STATUS=$(docker compose ps app-$TARGET_ENV --format json | jq -r '.[0].State' 2>/dev/null || echo "unknown")
+
+            if [ "$CONTAINER_STATUS" != "running" ]; then
+              echo "Error: Container app-$TARGET_ENV is not running (status: $CONTAINER_STATUS)"
               docker compose ps
-              docker compose logs $CONTAINER_NAME
+              docker compose logs app-$TARGET_ENV --tail=50
               exit 1
             fi
+
+            echo "Container app-$TARGET_ENV is running"
 
             # Health check del contenedor
             HEALTH_RESPONSE=$(curl -s http://localhost:$TARGET_PORT/api/health)
@@ -242,7 +257,8 @@ jobs:
               echo "Health check passed"
             else
               echo "Health check failed"
-              docker compose logs $CONTAINER_NAME
+              echo "Response: $HEALTH_RESPONSE"
+              docker compose logs app-$TARGET_ENV --tail=100
               exit 1
             fi
 
@@ -253,7 +269,7 @@ jobs:
               echo "HTTP response OK"
             else
               echo "HTTP response: $HTTP_CODE"
-              docker compose logs $CONTAINER_NAME
+              docker compose logs app-$TARGET_ENV --tail=100
               exit 1
             fi
 
