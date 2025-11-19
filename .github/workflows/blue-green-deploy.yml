@@ -11,7 +11,10 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # Job 1: Build y Push 
+
+  # -----------------------------------
+  # Job 1: Build y Push de la imagen
+  # -----------------------------------
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
@@ -47,7 +50,6 @@ jobs:
       - name: Prepare single tag for deployment
         id: prepare-tag
         run: |
-          # Extraer solo el tag con SHA (segunda línea)
           TAG=$(echo "${{ steps.meta.outputs.tags }}" | grep "v-" | head -n 1)
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "Using tag: $TAG"
@@ -65,57 +67,15 @@ jobs:
             NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
             NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 
-  # Job 2: Determinar Entorno Inactivo
-  determine-target:
+  # -----------------------------------
+  # Job 2: Deploy al entorno INACTIVO
+  # -----------------------------------
+  deploy-to-inactive:
     needs: build-and-push
     runs-on: ubuntu-latest
-    outputs:
-      target-env: ${{ steps.set-output.outputs.target }}
-      current-env: ${{ steps.set-output.outputs.current }}
-
-    steps:
-      - name: Check current active environment
-        id: check
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd ~/apps/turismo-pwa
-
-            # Leer entorno activo (default: blue)
-            ACTIVE_ENV=$(grep ACTIVE_ENV .env | cut -d'=' -f2 || echo "blue")
-
-            # Determinar target (invertir)
-            if [ "$ACTIVE_ENV" = "blue" ]; then
-              TARGET_ENV="green"
-            else
-              TARGET_ENV="blue"
-            fi
-
-            echo "Current active: $ACTIVE_ENV"
-            echo "Deploy target: $TARGET_ENV"
-
-            # Output para capturar
-            echo "OUTPUT_TARGET=$TARGET_ENV"
-            echo "OUTPUT_CURRENT=$ACTIVE_ENV"
-
-      - name: Set outputs
-        id: set-output
-        run: |
-          # Extraer valores del output del SSH
-          TARGET=$(echo "${{ steps.check.outputs.stdout }}" | grep "OUTPUT_TARGET=" | cut -d'=' -f2)
-          CURRENT=$(echo "${{ steps.check.outputs.stdout }}" | grep "OUTPUT_CURRENT=" | cut -d'=' -f2)
-
-          echo "target=$TARGET" >> $GITHUB_OUTPUT
-          echo "current=$CURRENT" >> $GITHUB_OUTPUT
-
-  # Job 3: Deploy a Entorno Inactivo
-  deploy-to-inactive:
-    needs: [build-and-push, determine-target]
-    runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    outputs:
+      target-env: ${{ steps.save-output.outputs.target_env }}
 
     steps:
       - name: Checkout code
@@ -131,91 +91,84 @@ jobs:
           target: ~/apps/turismo-pwa/
           strip_components: 0
 
-      - name: Deploy to ${{ needs.determine-target.outputs.target-env }} environment
+      - name: Determine target and deploy
+        id: determine
         uses: appleboy/ssh-action@master
         env:
-          TARGET_ENV: ${{ needs.determine-target.outputs.target-env }}
           IMAGE_TAG: ${{ needs.build-and-push.outputs.image-tag }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: TARGET_ENV,IMAGE_TAG
+          envs: IMAGE_TAG
           script: |
             cd ~/apps/turismo-pwa
 
-            # Login a registry
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            # Exportar variables
             export GITHUB_REPOSITORY=${{ github.repository }}
 
-            # Backup del .env actual si existe
-            if [ -f .env ]; then
-              cp .env .env.backup 2>/dev/null || true
-            fi
-
-            # Leer valores actuales del .env (si existe y es válido)
             CURRENT_BLUE_TAG="latest"
             CURRENT_GREEN_TAG="latest"
             CURRENT_ACTIVE_ENV="blue"
 
-            if [ -f .env.backup ]; then
-              CURRENT_BLUE_TAG=$(grep "^BLUE_TAG=" .env.backup 2>/dev/null | cut -d'=' -f2 || echo "latest")
-              CURRENT_GREEN_TAG=$(grep "^GREEN_TAG=" .env.backup 2>/dev/null | cut -d'=' -f2 || echo "latest")
-              CURRENT_ACTIVE_ENV=$(grep "^ACTIVE_ENV=" .env.backup 2>/dev/null | cut -d'=' -f2 || echo "blue")
+            if [ -f .env ]; then
+              CURRENT_BLUE_TAG=$(grep "^BLUE_TAG=" .env | cut -d'=' -f2)
+              CURRENT_GREEN_TAG=$(grep "^GREEN_TAG=" .env | cut -d'=' -f2)
+              CURRENT_ACTIVE_ENV=$(grep "^ACTIVE_ENV=" .env | cut -d'=' -f2)
             fi
 
-            # Actualizar tag del entorno target
-            if [ "$TARGET_ENV" = "blue" ]; then
-              export BLUE_TAG="$IMAGE_TAG"
-              export GREEN_TAG="$CURRENT_GREEN_TAG"
+            if [ "$CURRENT_ACTIVE_ENV" = "blue" ]; then
+              TARGET_ENV="green"
             else
-              export BLUE_TAG="$CURRENT_BLUE_TAG"
-              export GREEN_TAG="$IMAGE_TAG"
+              TARGET_ENV="blue"
             fi
 
-            # Eliminar .env corrupto y crear uno nuevo limpio
+            echo "Current active: $CURRENT_ACTIVE_ENV"
+            echo "Deploy target: $TARGET_ENV"
+
+            if [ "$TARGET_ENV" = "blue" ]; then
+              BLUE_TAG="$IMAGE_TAG"
+              GREEN_TAG="$CURRENT_GREEN_TAG"
+            else
+              BLUE_TAG="$CURRENT_BLUE_TAG"
+              GREEN_TAG="$IMAGE_TAG"
+            fi
+
             rm -f .env
 
-            # Crear .env línea por línea para evitar problemas con caracteres especiales
-            echo "BLUE_TAG=${BLUE_TAG}" > .env
-            echo "GREEN_TAG=${GREEN_TAG}" >> .env
-            echo "ACTIVE_ENV=${CURRENT_ACTIVE_ENV}" >> .env
-            echo "GITHUB_REPOSITORY=${GITHUB_REPOSITORY}" >> .env
+            printf "BLUE_TAG=%s\n" "$BLUE_TAG" > .env
+            printf "GREEN_TAG=%s\n" "$GREEN_TAG" >> .env
+            printf "ACTIVE_ENV=%s\n" "$CURRENT_ACTIVE_ENV" >> .env
+            printf "GITHUB_REPOSITORY=%s\n" "$GITHUB_REPOSITORY" >> .env
 
-            echo "Generated .env file:"
+            echo "Generated .env:"
             cat .env
 
-            # Exportar variables para docker-compose
-            export BLUE_TAG="${BLUE_TAG}"
-            export GREEN_TAG="${GREEN_TAG}"
-            export ACTIVE_ENV="${CURRENT_ACTIVE_ENV}"
-            export GITHUB_REPOSITORY="${GITHUB_REPOSITORY}"
-
-            # Pull nueva imagen solo para el target
-            echo "Pulling image for $TARGET_ENV..."
             docker compose pull app-$TARGET_ENV
-
-            # Restart solo el contenedor target (sin afectar el activo)
-            echo "Starting $TARGET_ENV container..."
             docker compose up -d app-$TARGET_ENV
 
-            # Verificar estado
             docker compose ps app-$TARGET_ENV
 
-            echo "Deployed to $TARGET_ENV environment"
+            echo "$TARGET_ENV" > target_env.txt
 
-  # Job 4: Tests en Entorno Inactivo
+      - name: Save target env
+        id: save-output
+        run: |
+          echo "target_env=$(cat ~/apps/turismo-pwa/target_env.txt)" >> $GITHUB_OUTPUT
+
+  # -----------------------------------
+  # Job 3: Tests sobre el entorno inactivo
+  # -----------------------------------
   test-inactive-environment:
-    needs: [deploy-to-inactive, determine-target]
+    needs: deploy-to-inactive
     runs-on: ubuntu-latest
+    env:
+      TARGET_ENV: ${{ needs.deploy-to-inactive.outputs.target-env }}
 
     steps:
-      - name: Run health checks on ${{ needs.determine-target.outputs.target-env }}
+      - name: Run health checks
         uses: appleboy/ssh-action@master
-        env:
-          TARGET_ENV: ${{ needs.determine-target.outputs.target-env }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
@@ -224,84 +177,75 @@ jobs:
           script: |
             cd ~/apps/turismo-pwa
 
-            # Determinar puerto del target
             if [ "$TARGET_ENV" = "blue" ]; then
               TARGET_PORT=3001
-              CONTAINER_NAME="turismo-pwa-blue"
             else
               TARGET_PORT=3002
-              CONTAINER_NAME="turismo-pwa-green"
             fi
 
-            echo "Testing $TARGET_ENV on port $TARGET_PORT..."
+            echo "Testing $TARGET_ENV on port $TARGET_PORT"
 
-            # Esperar que el contenedor esté ready
             sleep 30
 
-            # Verificar que el contenedor está corriendo
-            CONTAINER_STATUS=$(docker compose ps app-$TARGET_ENV --format json | jq -r '.[0].State' 2>/dev/null || echo "unknown")
+            STATUS=$(docker compose ps app-$TARGET_ENV --format json | jq -r '.[0].State')
 
-            if [ "$CONTAINER_STATUS" != "running" ]; then
-              echo "Error: Container app-$TARGET_ENV is not running (status: $CONTAINER_STATUS)"
-              docker compose ps
-              docker compose logs app-$TARGET_ENV --tail=50
+            if [ "$STATUS" != "running" ]; then
+              echo "Container not running. Status: $STATUS"
               exit 1
             fi
 
-            echo "Container app-$TARGET_ENV is running"
+            HEALTH=$(curl -s http://localhost:$TARGET_PORT/api/health)
 
-            # Health check del contenedor
-            HEALTH_RESPONSE=$(curl -s http://localhost:$TARGET_PORT/api/health)
-
-            if echo "$HEALTH_RESPONSE" | grep -q '"status":"ok"'; then
-              echo "Health check passed"
+            if echo "$HEALTH" | grep -q '"status":"ok"'; then
+              echo "Health OK"
             else
-              echo "Health check failed"
-              echo "Response: $HEALTH_RESPONSE"
-              docker compose logs app-$TARGET_ENV --tail=100
+              echo "Health failed"
               exit 1
             fi
 
-            # Verificar que responde correctamente
-            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$TARGET_PORT/)
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$TARGET_PORT/)
 
-            if [ "$HTTP_CODE" -eq 200 ]; then
-              echo "HTTP response OK"
-            else
-              echo "HTTP response: $HTTP_CODE"
-              docker compose logs app-$TARGET_ENV --tail=100
+            if [ "$CODE" -ne 200 ]; then
+              echo "HTTP code not OK: $CODE"
               exit 1
             fi
 
-            echo "All tests passed on $TARGET_ENV!"
-
-  # Job 5: Switch de Tráfico (Manual Approval)
+  # -----------------------------------
+  # Job 4: Switch de tráfico (manual)
+  # -----------------------------------
   switch-traffic:
-    needs: [test-inactive-environment, determine-target]
+    needs: test-inactive-environment
     runs-on: ubuntu-latest
-    environment: production  # Requiere aprobación manual
+    environment: production
 
     steps:
-      - name: Switch traffic to ${{ needs.determine-target.outputs.target-env }}
+      - name: Switch traffic
         uses: appleboy/ssh-action@master
-        env:
-          TARGET_ENV: ${{ needs.determine-target.outputs.target-env }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: TARGET_ENV
           script: |
             cd ~/apps/turismo-pwa
+
+            ACTIVE_ENV=$(grep "^ACTIVE_ENV=" .env | cut -d'=' -f2)
+
+            if [ "$ACTIVE_ENV" = "blue" ]; then
+              TARGET_ENV="green"
+            else
+              TARGET_ENV="blue"
+            fi
+
             chmod +x scripts/switch-traffic.sh
             ./scripts/switch-traffic.sh $TARGET_ENV
 
-            echo "Traffic switched to $TARGET_ENV!"
-            echo "Deployment complete!"
+            echo "Traffic switched to $TARGET_ENV"
 
-  # Job 6: Cleanup
+  # -----------------------------------
+  # Job 5: Cleanup
+  # -----------------------------------
   cleanup:
-    needs: [switch-traffic, determine-target]
+    needs: switch-traffic
     runs-on: ubuntu-latest
     if: success()
 
@@ -313,6 +257,5 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd ~/apps/turismo-pwa
             docker image prune -af
             echo "Cleanup complete"
