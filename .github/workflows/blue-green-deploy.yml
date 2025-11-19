@@ -18,7 +18,7 @@ jobs:
       contents: read
       packages: write
     outputs:
-      image-tag: ${{ steps.meta.outputs.tags }}
+      image-tag: ${{ steps.prepare-tag.outputs.tag }}
 
     steps:
       - name: Checkout code
@@ -43,6 +43,14 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha,prefix=v-
             type=ref,event=pr
+
+      - name: Prepare single tag for deployment
+        id: prepare-tag
+        run: |
+          # Extraer solo el tag con SHA (segunda línea)
+          TAG=$(echo "${{ steps.meta.outputs.tags }}" | grep "v-" | head -n 1)
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Using tag: $TAG"
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -142,18 +150,42 @@ jobs:
             # Exportar variables
             export GITHUB_REPOSITORY=${{ github.repository }}
 
-            # Actualizar tag del entorno target
-            if [ "$TARGET_ENV" = "blue" ]; then
-              export BLUE_TAG=$IMAGE_TAG
-              export GREEN_TAG=$(grep GREEN_TAG .env | cut -d'=' -f2 || echo "latest")
-            else
-              export BLUE_TAG=$(grep BLUE_TAG .env | cut -d'=' -f2 || echo "latest")
-              export GREEN_TAG=$IMAGE_TAG
+            # Backup del .env actual si existe
+            if [ -f .env ]; then
+              cp .env .env.backup 2>/dev/null || true
             fi
 
-            echo "BLUE_TAG=$BLUE_TAG" > .env
-            echo "GREEN_TAG=$GREEN_TAG" >> .env
-            echo "ACTIVE_ENV=$(grep ACTIVE_ENV .env | cut -d'=' -f2 || echo 'blue')" >> .env
+            # Leer valores actuales del .env (si existe y es válido)
+            CURRENT_BLUE_TAG="latest"
+            CURRENT_GREEN_TAG="latest"
+            CURRENT_ACTIVE_ENV="blue"
+
+            if [ -f .env.backup ]; then
+              CURRENT_BLUE_TAG=$(grep "^BLUE_TAG=" .env.backup 2>/dev/null | cut -d'=' -f2 || echo "latest")
+              CURRENT_GREEN_TAG=$(grep "^GREEN_TAG=" .env.backup 2>/dev/null | cut -d'=' -f2 || echo "latest")
+              CURRENT_ACTIVE_ENV=$(grep "^ACTIVE_ENV=" .env.backup 2>/dev/null | cut -d'=' -f2 || echo "blue")
+            fi
+
+            # Actualizar tag del entorno target
+            if [ "$TARGET_ENV" = "blue" ]; then
+              export BLUE_TAG="$IMAGE_TAG"
+              export GREEN_TAG="$CURRENT_GREEN_TAG"
+            else
+              export BLUE_TAG="$CURRENT_BLUE_TAG"
+              export GREEN_TAG="$IMAGE_TAG"
+            fi
+
+            # Eliminar .env corrupto y crear uno nuevo limpio
+            rm -f .env
+
+            # Crear .env línea por línea para evitar problemas con caracteres especiales
+            echo "BLUE_TAG=${BLUE_TAG}" > .env
+            echo "GREEN_TAG=${GREEN_TAG}" >> .env
+            echo "ACTIVE_ENV=${CURRENT_ACTIVE_ENV}" >> .env
+            echo "GITHUB_REPOSITORY=${GITHUB_REPOSITORY}" >> .env
+
+            echo "Generated .env file:"
+            cat .env
 
             # Pull nueva imagen solo para el target
             docker compose pull app-$TARGET_ENV
