@@ -108,10 +108,20 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Esperar 15 segundos a que la app inicie
-            sleep 15
+            cd ~/apps/turismo-pwa
+
+            # Esperar a que los contenedores estén listos
+            sleep 30
+
+            # Verificar que nginx está corriendo
+            if ! docker compose ps | grep -q "nginx-proxy.*running"; then
+              echo "Error: Nginx no está corriendo"
+              docker compose ps
+              docker compose logs nginx
+              exit 1
+            fi
 
             # Verificar que nginx responde
-            curl -f http://localhost/health || exit 1
+            curl -f http://localhost:80/health || exit 1
 
             echo "Despliegue exitoso!"

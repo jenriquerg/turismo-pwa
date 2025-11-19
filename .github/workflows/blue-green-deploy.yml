@@ -62,8 +62,8 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     outputs:
-      target-env: ${{ steps.check.outputs.target }}
-      current-env: ${{ steps.check.outputs.current }}
+      target-env: ${{ steps.set-output.outputs.target }}
+      current-env: ${{ steps.set-output.outputs.current }}
 
     steps:
       - name: Check current active environment
@@ -86,11 +86,22 @@ jobs:
               TARGET_ENV="blue"
             fi
 
-            echo "target=$TARGET_ENV" >> $GITHUB_OUTPUT
-            echo "current=$ACTIVE_ENV" >> $GITHUB_OUTPUT
-
             echo "Current active: $ACTIVE_ENV"
             echo "Deploy target: $TARGET_ENV"
+
+            # Output para capturar
+            echo "OUTPUT_TARGET=$TARGET_ENV"
+            echo "OUTPUT_CURRENT=$ACTIVE_ENV"
+
+      - name: Set outputs
+        id: set-output
+        run: |
+          # Extraer valores del output del SSH
+          TARGET=$(echo "${{ steps.check.outputs.stdout }}" | grep "OUTPUT_TARGET=" | cut -d'=' -f2)
+          CURRENT=$(echo "${{ steps.check.outputs.stdout }}" | grep "OUTPUT_CURRENT=" | cut -d'=' -f2)
+
+          echo "target=$TARGET" >> $GITHUB_OUTPUT
+          echo "current=$CURRENT" >> $GITHUB_OUTPUT
 
   # Job 3: Deploy a Entorno Inactivo
   deploy-to-inactive:
@@ -173,32 +184,44 @@ jobs:
             # Determinar puerto del target
             if [ "$TARGET_ENV" = "blue" ]; then
               TARGET_PORT=3001
+              CONTAINER_NAME="turismo-pwa-blue"
             else
               TARGET_PORT=3002
+              CONTAINER_NAME="turismo-pwa-green"
             fi
 
             echo "Testing $TARGET_ENV on port $TARGET_PORT..."
 
             # Esperar que el contenedor esté ready
-            sleep 20
+            sleep 30
 
-            # Health check directo al contenedor
-            HEALTH=$(curl -f http://localhost:$TARGET_PORT/health || echo "FAIL")
-
-            if [ "$HEALTH" != "FAIL" ]; then
-              echo "Health check passed"
-            else
-              echo "Health check failed"
+            # Verificar que el contenedor está corriendo
+            if ! docker compose ps | grep -q "$CONTAINER_NAME.*running"; then
+              echo "Error: Container $CONTAINER_NAME is not running"
+              docker compose ps
+              docker compose logs $CONTAINER_NAME
               exit 1
             fi
 
-            # Test adicional: verificar que Next.js responde
+            # Health check del contenedor
+            HEALTH_RESPONSE=$(curl -s http://localhost:$TARGET_PORT/api/health)
+
+            if echo "$HEALTH_RESPONSE" | grep -q '"status":"ok"'; then
+              echo "Health check passed"
+            else
+              echo "Health check failed"
+              docker compose logs $CONTAINER_NAME
+              exit 1
+            fi
+
+            # Verificar que responde correctamente
             HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$TARGET_PORT/)
 
             if [ "$HTTP_CODE" -eq 200 ]; then
-              echo "HTTP response OK (200)"
+              echo "HTTP response OK"
             else
               echo "HTTP response: $HTTP_CODE"
+              docker compose logs $CONTAINER_NAME
               exit 1
             fi
 
