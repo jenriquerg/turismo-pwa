@@ -86,7 +86,7 @@ export default function PrivacyPolicyPage() {
                                 <li>Ubicación basada en dirección IP</li>
                                 <li>Ubicación proporcionada manualmente por el usuario</li>
                             </ul>
-                            <p className="mt-3 font-semibold text-amber-900"><strong>IMPORTANTE:</strong> La recopilación de datos de geolocalización GPS se considera tratamiento de datos sensibles según la LFPDPPP. Esta funcionalidad es <strong>completamente opcional</strong> y solo se activa cuando usted otorga permisos explícitos en su dispositivo y utiliza la función "Buscar servicios cercanos". Puede revocar estos permisos en cualquier momento desde la configuración de su dispositivo.</p>
+                            <p className="mt-3 font-semibold text-amber-900"><strong>IMPORTANTE:</strong> La recopilación de datos de geolocalización GPS se considera tratamiento de datos sensibles según la LFPDPPP. Esta funcionalidad es <strong>completamente opcional</strong> y solo se activa cuando usted otorga permisos explícitos en su dispositivo y utiliza la función &quot;Buscar servicios cercanos&quot;. Puede revocar estos permisos en cualquier momento desde la configuración de su dispositivo.</p>
                         </div>
 
                         <div className="space-y-3">
@@ -207,7 +207,7 @@ export default function PrivacyPolicyPage() {
                                 </div>
                             </div>
 
-                            <p className="mt-4 font-semibold"><strong>Si no desea que sus datos sean tratados para estas finalidades voluntarias</strong>, puede manifestarlo enviando un correo a <a href="mailto:privacidad@turiexpress.com" className="text-emerald-600 hover:text-emerald-700">privacidad@turiexpress.com</a> con el asunto "Oposición a finalidades secundarias". La negativa para estas finalidades NO afectará la prestación de nuestros servicios principales.</p>
+                            <p className="mt-4 font-semibold"><strong>Si no desea que sus datos sean tratados para estas finalidades voluntarias</strong>, puede manifestarlo enviando un correo a <a href="mailto:privacidad@turiexpress.com" className="text-emerald-600 hover:text-emerald-700">privacidad@turiexpress.com</a> con el asunto &quot;Oposición a finalidades secundarias&quot;. La negativa para estas finalidades NO afectará la prestación de nuestros servicios principales.</p>
                         </div>
                     </section>
 
@@ -613,7 +613,7 @@ export default function PrivacyPolicyPage() {
                                 <li>Publicación en <a href="https://turiexpress.com/aviso-privacidad" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-700">https://turiexpress.com/aviso-privacidad</a></li>
                             </ol>
                             <p className="mt-2">Usted tendrá un plazo de <strong>10 días naturales</strong> para manifestar su oposición a los cambios. Si no manifiesta oposición, se entenderá que acepta las modificaciones.</p>
-                            <p className="mt-2"><strong>Cambios menores</strong> (correcciones de formato, actualizaciones de datos de contacto, clarificaciones) se publicarán en nuestro sitio web con la fecha de "Última actualización".</p>
+                            <p className="mt-2"><strong>Cambios menores</strong> (correcciones de formato, actualizaciones de datos de contacto, clarificaciones) se publicarán en nuestro sitio web con la fecha de &quot;Última actualización&quot;.</p>
                         </div>
 
                         <div className="space-y-3">
