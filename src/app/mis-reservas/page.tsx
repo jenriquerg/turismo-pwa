@@ -8,9 +8,11 @@ import Loading from "@/components/common/Loading";
 import ReservaCard from "@/components/cards/ReservaCard";
 import { getCurrentUser } from "@/lib/auth";
 import type { Reserva } from "@/types";
+import { useToast } from "@/hooks/useToast";
 
 export default function MisReservasPage() {
   const router = useRouter();
+  const toast = useToast();
   const [user, setUser] = useState<{ id: string; email?: string; user_metadata?: { name?: string; user_type?: string } } | null>(null);
   const [reservas, setReservas] = useState<Reserva[]>([]);
   const [filteredReservas, setFilteredReservas] = useState<Reserva[]>([]);
@@ -89,12 +91,12 @@ export default function MisReservasPage() {
           setReservas(updatedData.data);
         }
 
-        alert("Reserva cancelada exitosamente");
+        toast.success("Reserva cancelada exitosamente");
       } else {
-        alert(`Error: ${data.error}`);
+        toast.error(`Error: ${data.error}`);
       }
-    } catch (error) {
-      alert("Error al cancelar la reserva");
+    } catch {
+      toast.error("Error al cancelar la reserva");
     }
   };
 

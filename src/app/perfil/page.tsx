@@ -6,9 +6,11 @@ import Header from "@/components/common/Header";
 import Footer from "@/components/common/Footer";
 import Loading from "@/components/common/Loading";
 import { getCurrentUser, logout } from "@/lib/auth";
+import { useToast } from "@/hooks/useToast";
 
 export default function PerfilPage() {
   const router = useRouter();
+  const toast = useToast();
   const [user, setUser] = useState<{ id: string; email?: string; user_metadata?: { name?: string; user_type?: string } } | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -46,7 +48,7 @@ export default function PerfilPage() {
 
   const handleSave = async () => {
     // Aquí iría la lógica para actualizar el perfil en Supabase
-    alert("Funcionalidad de actualización de perfil próximamente");
+    toast.info("Funcionalidad de actualización de perfil próximamente");
     setEditing(false);
   };
 
@@ -180,24 +182,13 @@ export default function PerfilPage() {
 
             {/* Security Section */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Seguridad</h3>
-              <div className="space-y-3">
-                <button className="w-full px-4 py-3 text-left border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-700">Cambiar contraseña</span>
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </button>
-
-                <button
-                  onClick={handleLogout}
-                  className="w-full px-4 py-3 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors font-medium"
-                >
-                  Cerrar Sesión
-                </button>
-              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Sesión</h3>
+              <button
+                onClick={handleLogout}
+                className="w-full px-4 py-3 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors font-medium"
+              >
+                Cerrar Sesión
+              </button>
             </div>
 
             {/* Account Stats (for tourists) */}

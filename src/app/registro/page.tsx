@@ -5,6 +5,45 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { register } from "@/lib/auth";
 
+// Validación de contraseña robusta
+const validatePassword = (password: string) => {
+  const errors: string[] = [];
+
+  if (password.length < 8) {
+    errors.push("Mínimo 8 caracteres");
+  }
+  if (!/[A-Z]/.test(password)) {
+    errors.push("Al menos una mayúscula");
+  }
+  if (!/[a-z]/.test(password)) {
+    errors.push("Al menos una minúscula");
+  }
+  if (!/[0-9]/.test(password)) {
+    errors.push("Al menos un número");
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+  };
+};
+
+// Calcular fortaleza de contraseña
+const getPasswordStrength = (password: string) => {
+  let strength = 0;
+
+  if (password.length >= 8) strength++;
+  if (password.length >= 12) strength++;
+  if (/[A-Z]/.test(password)) strength++;
+  if (/[a-z]/.test(password)) strength++;
+  if (/[0-9]/.test(password)) strength++;
+  if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+  if (strength <= 2) return { level: "Débil", color: "bg-red-500", width: "w-1/3" };
+  if (strength <= 4) return { level: "Media", color: "bg-yellow-500", width: "w-2/3" };
+  return { level: "Fuerte", color: "bg-green-500", width: "w-full" };
+};
+
 export default function RegisterPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
@@ -16,13 +55,22 @@ export default function RegisterPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    // Validar contraseñas
+    // Validar contraseña
+    const passwordValidation = validatePassword(formData.password);
+    if (!passwordValidation.isValid) {
+      setError(`Contraseña no cumple requisitos: ${passwordValidation.errors.join(", ")}`);
+      setLoading(false);
+      return;
+    }
+
+    // Validar que coincidan
     if (formData.password !== formData.confirmPassword) {
       setError("Las contraseñas no coinciden");
       setLoading(false);
@@ -50,6 +98,8 @@ export default function RegisterPage() {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    // Limpiar error cuando el usuario empieza a escribir
+    if (error) setError("");
   };
 
   return (
@@ -145,11 +195,54 @@ export default function RegisterPage() {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
+                onFocus={() => setShowPasswordRequirements(true)}
                 placeholder="••••••••"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
                 required
-                minLength={6}
+                minLength={8}
               />
+
+              {/* Password Strength Indicator */}
+              {formData.password && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-600">Fortaleza:</span>
+                    <span className={`font-medium ${
+                      getPasswordStrength(formData.password).color.replace('bg-', 'text-')
+                    }`}>
+                      {getPasswordStrength(formData.password).level}
+                    </span>
+                  </div>
+                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-300 ${
+                        getPasswordStrength(formData.password).color
+                      } ${getPasswordStrength(formData.password).width}`}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Password Requirements */}
+              {showPasswordRequirements && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs space-y-1">
+                  <p className="font-semibold text-blue-900 mb-2">Requisitos de contraseña:</p>
+                  <div className="space-y-1 text-blue-800">
+                    <p className={formData.password.length >= 8 ? "text-green-600" : ""}>
+                      {formData.password.length >= 8 ? "✓" : "○"} Mínimo 8 caracteres
+                    </p>
+                    <p className={/[A-Z]/.test(formData.password) ? "text-green-600" : ""}>
+                      {/[A-Z]/.test(formData.password) ? "✓" : "○"} Al menos una mayúscula
+                    </p>
+                    <p className={/[a-z]/.test(formData.password) ? "text-green-600" : ""}>
+                      {/[a-z]/.test(formData.password) ? "✓" : "○"} Al menos una minúscula
+                    </p>
+                    <p className={/[0-9]/.test(formData.password) ? "text-green-600" : ""}>
+                      {/[0-9]/.test(formData.password) ? "✓" : "○"} Al menos un número
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Confirm Password */}
@@ -169,8 +262,20 @@ export default function RegisterPage() {
                 placeholder="••••••••"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
                 required
-                minLength={6}
+                minLength={8}
               />
+              {/* Password Match Indicator */}
+              {formData.confirmPassword && (
+                <p className={`text-xs ${
+                  formData.password === formData.confirmPassword
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}>
+                  {formData.password === formData.confirmPassword
+                    ? "✓ Las contraseñas coinciden"
+                    : "✗ Las contraseñas no coinciden"}
+                </p>
+              )}
             </div>
 
             {/* Terms */}

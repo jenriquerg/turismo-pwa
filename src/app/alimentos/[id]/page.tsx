@@ -11,10 +11,12 @@ import ResenaCard from "@/components/cards/ResenaCard";
 import ResenaForm, { type ResenaFormData } from "@/components/forms/ResenaForm";
 import { getCurrentUser } from "@/lib/auth";
 import type { Alimento, Resena } from "@/types";
+import { useToast } from "@/hooks/useToast";
 
 export default function AlimentoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
+  const toast = useToast();
   const [alimento, setAlimento] = useState<Alimento | null>(null);
   const [resenas, setResenas] = useState<Resena[]>([]);
   const [user, setUser] = useState<{ id: string; email?: string; user_metadata?: { name?: string; user_type?: string } } | null>(null);
@@ -81,13 +83,13 @@ export default function AlimentoDetailPage({ params }: { params: Promise<{ id: s
       const result = await response.json();
 
       if (result.success) {
-        alert("¡Pedido creado exitosamente!");
+        toast.success("¡Pedido creado exitosamente!");
         router.push("/mis-reservas");
       } else {
-        alert(`Error: ${result.error}`);
+        toast.error(`Error: ${result.error}`);
       }
-    } catch (error) {
-      alert("Error al crear el pedido");
+    } catch {
+      toast.error("Error al crear el pedido");
     } finally {
       setReserving(false);
     }
@@ -117,7 +119,7 @@ export default function AlimentoDetailPage({ params }: { params: Promise<{ id: s
       const result = await response.json();
 
       if (result.success) {
-        alert("¡Reseña publicada exitosamente!");
+        toast.success("¡Reseña publicada exitosamente!");
         setShowResenaForm(false);
         // Recargar reseñas
         const resenasRes = await fetch(`/api/resenas?servicioId=${id}`);
@@ -126,10 +128,10 @@ export default function AlimentoDetailPage({ params }: { params: Promise<{ id: s
           setResenas(resenasData.data);
         }
       } else {
-        alert(`Error: ${result.error}`);
+        toast.error(`Error: ${result.error}`);
       }
-    } catch (error) {
-      alert("Error al publicar la reseña");
+    } catch {
+      toast.error("Error al publicar la reseña");
     } finally {
       setReviewing(false);
     }

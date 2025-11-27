@@ -9,12 +9,13 @@ import Loading from "@/components/common/Loading";
 import MiServicioCard from "@/components/cards/MiServicioCard";
 import { getCurrentUser } from "@/lib/auth";
 import type { Alojamiento, Alimento, Experiencia } from "@/types";
+import { useToast } from "@/hooks/useToast";
 
 type TabType = "todos" | "alojamientos" | "alimentos" | "experiencias";
 
 export default function MisServiciosPage() {
   const router = useRouter();
-  const [user, setUser] = useState<{ id: string; email?: string; user_metadata?: { name?: string; user_type?: string } } | null>(null);
+  const toast = useToast();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>("todos");
 
@@ -32,7 +33,7 @@ export default function MisServiciosPage() {
       }
 
       if (currentUser.user_metadata?.user_type !== "proveedor") {
-        alert("Solo los proveedores pueden acceder a esta página");
+        toast.error("Solo los proveedores pueden acceder a esta página");
         router.push("/dashboard");
         return;
       }
@@ -110,10 +111,10 @@ export default function MisServiciosPage() {
           );
         }
       } else {
-        alert(`Error: ${result.error}`);
+        toast.error(`Error: ${result.error}`);
       }
-    } catch (error) {
-      alert("Error al actualizar disponibilidad");
+    } catch {
+      toast.error("Error al actualizar disponibilidad");
     }
   };
 
@@ -136,12 +137,12 @@ export default function MisServiciosPage() {
         } else {
           setExperiencias((prev) => prev.filter((item) => item.id !== id));
         }
-        alert("Servicio eliminado exitosamente");
+        toast.success("Servicio eliminado exitosamente");
       } else {
-        alert(`Error: ${result.error}`);
+        toast.error(`Error: ${result.error}`);
       }
-    } catch (error) {
-      alert("Error al eliminar servicio");
+    } catch {
+      toast.error("Error al eliminar servicio");
     }
   };
 

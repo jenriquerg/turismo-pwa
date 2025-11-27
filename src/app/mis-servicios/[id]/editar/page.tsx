@@ -8,6 +8,7 @@ import Loading from "@/components/common/Loading";
 import ServiceForm from "@/components/forms/ServiceForm";
 import { getCurrentUser } from "@/lib/auth";
 import type { Alojamiento, Alimento, Experiencia } from "@/types";
+import { useToast } from "@/hooks/useToast";
 
 type ServiceType = "alojamiento" | "alimento" | "experiencia";
 type ServiceData = Alojamiento | Alimento | Experiencia;
@@ -15,6 +16,7 @@ type ServiceData = Alojamiento | Alimento | Experiencia;
 export default function EditarServicioPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
+  const toast = useToast();
   const [user, setUser] = useState<{ id: string; email?: string; user_metadata?: { name?: string; user_type?: string } } | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -32,7 +34,7 @@ export default function EditarServicioPage({ params }: { params: Promise<{ id: s
       }
 
       if (currentUser.user_metadata?.user_type !== "proveedor") {
-        alert("Solo los proveedores pueden editar servicios");
+        toast.error("Solo los proveedores pueden editar servicios");
         router.push("/dashboard");
         return;
       }
@@ -75,11 +77,10 @@ export default function EditarServicioPage({ params }: { params: Promise<{ id: s
         }
 
         // No se encontró el servicio
-        alert("Servicio no encontrado");
+        toast.error("Servicio no encontrado");
         router.push("/mis-servicios");
-      } catch (error) {
-        console.error("Error al cargar servicio:", error);
-        alert("Error al cargar el servicio");
+      } catch {
+        toast.error("Error al cargar el servicio");
         router.push("/mis-servicios");
       }
     }
@@ -109,13 +110,13 @@ export default function EditarServicioPage({ params }: { params: Promise<{ id: s
       const result = await response.json();
 
       if (result.success) {
-        alert("¡Servicio actualizado exitosamente!");
+        toast.success("¡Servicio actualizado exitosamente!");
         router.push("/mis-servicios");
       } else {
-        alert(`Error: ${result.error}`);
+        toast.error(`Error: ${result.error}`);
       }
-    } catch (error) {
-      alert("Error al actualizar el servicio");
+    } catch {
+      toast.error("Error al actualizar el servicio");
     } finally {
       setUpdating(false);
     }
@@ -145,13 +146,13 @@ export default function EditarServicioPage({ params }: { params: Promise<{ id: s
       const result = await response.json();
 
       if (result.success) {
-        alert("Servicio eliminado exitosamente");
+        toast.success("Servicio eliminado exitosamente");
         router.push("/mis-servicios");
       } else {
-        alert(`Error: ${result.error}`);
+        toast.error(`Error: ${result.error}`);
       }
-    } catch (error) {
-      alert("Error al eliminar el servicio");
+    } catch {
+      toast.error("Error al eliminar el servicio");
     } finally {
       setDeleting(false);
     }

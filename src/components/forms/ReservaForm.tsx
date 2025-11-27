@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useToast } from "@/hooks/useToast";
 
 interface ReservaFormProps {
   precioBase: number;
@@ -24,6 +25,7 @@ export default function ReservaForm({
   capacidadMaxima,
   loading = false,
 }: ReservaFormProps) {
+  const toast = useToast();
   const [formData, setFormData] = useState<ReservaFormData>({
     fecha_inicio: "",
     fecha_fin: "",
@@ -46,7 +48,7 @@ export default function ReservaForm({
 
     // Validar capacidad máxima si está definida
     if (capacidadMaxima && formData.cantidad_personas > capacidadMaxima) {
-      alert(`La capacidad máxima es de ${capacidadMaxima} personas`);
+      toast.error(`La capacidad máxima es de ${capacidadMaxima} personas`);
       return;
     }
 

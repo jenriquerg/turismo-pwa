@@ -19,6 +19,14 @@ export default function DashboardPage() {
   const [experienciasDestacadas, setExperienciasDestacadas] = useState<Experiencia[]>([]);
   const [reservasActivas, setReservasActivas] = useState<Reserva[]>([]);
 
+  // Estadísticas del proveedor
+  const [totalServicios, setTotalServicios] = useState(0);
+  const [calificacionPromedio, setCalificacionPromedio] = useState<number | null>(null);
+
+  // Estadísticas del turista
+  const [totalReservas, setTotalReservas] = useState(0);
+  const [totalResenas, setTotalResenas] = useState(0);
+
   useEffect(() => {
     async function loadData() {
       const currentUser = await getCurrentUser();
@@ -30,28 +38,80 @@ export default function DashboardPage() {
 
       setUser(currentUser);
 
-      // Cargar servicios destacados
+      const userType = currentUser.user_metadata?.user_type || "turista";
+
+      // Cargar datos según tipo de usuario
       try {
-        const [alojamientosRes, experienciasRes, reservasRes] = await Promise.all([
-          fetch("/api/alojamientos?disponible=true"),
-          fetch("/api/experiencias?disponible=true"),
-          fetch(`/api/reservas?userId=${currentUser.id}&activas=true`),
-        ]);
+        if (userType === "proveedor") {
+          // Estadísticas de proveedor
+          const [alojamientosRes, alimentosRes, experienciasRes, reservasRes, resenasRes] = await Promise.all([
+            fetch(`/api/alojamientos?userId=${currentUser.id}`),
+            fetch(`/api/alimentos?userId=${currentUser.id}`),
+            fetch(`/api/experiencias?userId=${currentUser.id}`),
+            fetch(`/api/reservas?userId=${currentUser.id}&activas=true`),
+            fetch(`/api/resenas?providerId=${currentUser.id}`),
+          ]);
 
-        const alojamientosData = await alojamientosRes.json();
-        const experienciasData = await experienciasRes.json();
-        const reservasData = await reservasRes.json();
+          const alojamientosData = await alojamientosRes.json();
+          const alimentosData = await alimentosRes.json();
+          const experienciasData = await experienciasRes.json();
+          const reservasData = await reservasRes.json();
+          const resenasData = await resenasRes.json();
 
-        if (alojamientosData.success) {
-          setServiciosDestacados(alojamientosData.data.slice(0, 3));
-        }
+          // Calcular total de servicios
+          const totalAlojamientos = alojamientosData.success ? alojamientosData.data.length : 0;
+          const totalAlimentos = alimentosData.success ? alimentosData.data.length : 0;
+          const totalExperiencias = experienciasData.success ? experienciasData.data.length : 0;
+          setTotalServicios(totalAlojamientos + totalAlimentos + totalExperiencias);
 
-        if (experienciasData.success) {
-          setExperienciasDestacadas(experienciasData.data.slice(0, 3));
-        }
+          // Calcular calificación promedio
+          if (resenasData.success && resenasData.data.length > 0) {
+            const sumCalificaciones = resenasData.data.reduce((sum: number, resena: { calificacion: number }) => sum + resena.calificacion, 0);
+            setCalificacionPromedio(parseFloat((sumCalificaciones / resenasData.data.length).toFixed(1)));
+          }
 
-        if (reservasData.success) {
-          setReservasActivas(reservasData.data);
+          // Reservas activas
+          if (reservasData.success) {
+            setReservasActivas(reservasData.data);
+          }
+        } else {
+          // Estadísticas y datos de turista
+          const [alojamientosRes, experienciasRes, reservasRes, resenasRes, reservasActivasRes] = await Promise.all([
+            fetch("/api/alojamientos?disponible=true"),
+            fetch("/api/experiencias?disponible=true"),
+            fetch(`/api/reservas?userId=${currentUser.id}`),
+            fetch(`/api/resenas?userId=${currentUser.id}`),
+            fetch(`/api/reservas?userId=${currentUser.id}&activas=true`),
+          ]);
+
+          const alojamientosData = await alojamientosRes.json();
+          const experienciasData = await experienciasRes.json();
+          const reservasData = await reservasRes.json();
+          const resenasData = await resenasRes.json();
+          const reservasActivasData = await reservasActivasRes.json();
+
+          // Servicios destacados
+          if (alojamientosData.success) {
+            setServiciosDestacados(alojamientosData.data.slice(0, 3));
+          }
+
+          if (experienciasData.success) {
+            setExperienciasDestacadas(experienciasData.data.slice(0, 3));
+          }
+
+          // Estadísticas de turista
+          if (reservasData.success) {
+            setTotalReservas(reservasData.data.length);
+          }
+
+          if (resenasData.success) {
+            setTotalResenas(resenasData.data.length);
+          }
+
+          // Reservas activas
+          if (reservasActivasData.success) {
+            setReservasActivas(reservasActivasData.data);
+          }
         }
       } catch (error) {
         console.error("Error al cargar datos:", error);
@@ -96,7 +156,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Mis Servicios</p>
-                  <p className="text-3xl font-bold text-emerald-600 mt-2">0</p>
+                  <p className="text-3xl font-bold text-emerald-600 mt-2">{totalServicios}</p>
                 </div>
                 <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
                   <span className="text-2xl">🏠</span>
@@ -120,7 +180,16 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Calificación</p>
-                  <p className="text-3xl font-bold text-yellow-600 mt-2">N/A</p>
+                  <p className="text-3xl font-bold text-yellow-600 mt-2">
+                    {calificacionPromedio !== null ? (
+                      <span className="flex items-center gap-1">
+                        {calificacionPromedio}
+                        <span className="text-base">⭐</span>
+                      </span>
+                    ) : (
+                      <span className="text-lg text-gray-400">Sin reseñas</span>
+                    )}
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
                   <span className="text-2xl">⭐</span>
@@ -192,6 +261,45 @@ export default function DashboardPage() {
             ¡Hola, {userName}! 👋
           </h1>
           <p className="text-gray-600 mt-2">¿Qué te gustaría hacer hoy?</p>
+        </div>
+
+        {/* Stats Cards para Turista */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Mis Reservas</p>
+                <p className="text-3xl font-bold text-emerald-600 mt-2">{totalReservas}</p>
+              </div>
+              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">📅</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Reservas Activas</p>
+                <p className="text-3xl font-bold text-blue-600 mt-2">{reservasActivas.length}</p>
+              </div>
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">🎫</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Reseñas Publicadas</p>
+                <p className="text-3xl font-bold text-yellow-600 mt-2">{totalResenas}</p>
+              </div>
+              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">⭐</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Category Cards */}

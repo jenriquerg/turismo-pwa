@@ -7,11 +7,13 @@ import Footer from "@/components/common/Footer";
 import Loading from "@/components/common/Loading";
 import ServiceForm from "@/components/forms/ServiceForm";
 import { getCurrentUser } from "@/lib/auth";
+import { useToast } from "@/hooks/useToast";
 
 type ServiceType = "alojamiento" | "alimento" | "experiencia";
 
 export default function NuevoServicioPage() {
   const router = useRouter();
+  const toast = useToast();
   const [user, setUser] = useState<{ id: string; email?: string; user_metadata?: { name?: string; user_type?: string } } | null>(null);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -27,7 +29,7 @@ export default function NuevoServicioPage() {
       }
 
       if (currentUser.user_metadata?.user_type !== "proveedor") {
-        alert("Solo los proveedores pueden crear servicios");
+        toast.error("Solo los proveedores pueden crear servicios");
         router.push("/dashboard");
         return;
       }
@@ -64,13 +66,13 @@ export default function NuevoServicioPage() {
       const result = await response.json();
 
       if (result.success) {
-        alert("¡Servicio creado exitosamente!");
+        toast.success("¡Servicio creado exitosamente!");
         router.push("/mis-servicios");
       } else {
-        alert(`Error: ${result.error}`);
+        toast.error(`Error: ${result.error}`);
       }
-    } catch (error) {
-      alert("Error al crear el servicio");
+    } catch {
+      toast.error("Error al crear el servicio");
     } finally {
       setCreating(false);
     }

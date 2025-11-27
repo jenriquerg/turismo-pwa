@@ -11,10 +11,12 @@ import ResenaCard from "@/components/cards/ResenaCard";
 import ResenaForm, { type ResenaFormData } from "@/components/forms/ResenaForm";
 import { getCurrentUser } from "@/lib/auth";
 import type { Experiencia, Resena } from "@/types";
+import { useToast } from "@/hooks/useToast";
 
 export default function ExperienciaDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
+  const toast = useToast();
   const [experiencia, setExperiencia] = useState<Experiencia | null>(null);
   const [resenas, setResenas] = useState<Resena[]>([]);
   const [user, setUser] = useState<{ id: string; email?: string; user_metadata?: { name?: string; user_type?: string } } | null>(null);
@@ -61,7 +63,7 @@ export default function ExperienciaDetailPage({ params }: { params: Promise<{ id
     }
 
     if (experiencia && data.cantidad_personas > experiencia.capacidad_maxima) {
-      alert(`La capacidad máxima es de ${experiencia.capacidad_maxima} personas`);
+      toast.error(`La capacidad máxima es de ${experiencia.capacidad_maxima} personas`);
       return;
     }
 
@@ -86,13 +88,13 @@ export default function ExperienciaDetailPage({ params }: { params: Promise<{ id
       const result = await response.json();
 
       if (result.success) {
-        alert("¡Reserva creada exitosamente!");
+        toast.success("¡Reserva creada exitosamente!");
         router.push("/mis-reservas");
       } else {
-        alert(`Error: ${result.error}`);
+        toast.error(`Error: ${result.error}`);
       }
-    } catch (error) {
-      alert("Error al crear la reserva");
+    } catch {
+      toast.error("Error al crear la reserva");
     } finally {
       setReserving(false);
     }
@@ -122,7 +124,7 @@ export default function ExperienciaDetailPage({ params }: { params: Promise<{ id
       const result = await response.json();
 
       if (result.success) {
-        alert("¡Reseña publicada exitosamente!");
+        toast.success("¡Reseña publicada exitosamente!");
         setShowResenaForm(false);
         // Recargar reseñas
         const resenasRes = await fetch(`/api/resenas?servicioId=${id}`);
@@ -131,10 +133,10 @@ export default function ExperienciaDetailPage({ params }: { params: Promise<{ id
           setResenas(resenasData.data);
         }
       } else {
-        alert(`Error: ${result.error}`);
+        toast.error(`Error: ${result.error}`);
       }
-    } catch (error) {
-      alert("Error al publicar la reseña");
+    } catch {
+      toast.error("Error al publicar la reseña");
     } finally {
       setReviewing(false);
     }
