@@ -1,2 +1,2 @@
-export { supabase, SupabaseClientSingleton } from './client';
+export { getSupabaseClient, SupabaseClientSingleton } from './client';
 export { createSupabaseServerClient } from './server';

@@ -3,12 +3,14 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import Loading from "@/components/layout/Loading";
-import { getUser } from "@/lib/auth";
+import Image from "next/image";
+import Header from "@/components/common/Header";
+import Footer from "@/components/common/Footer";
+import Loading from "@/components/common/Loading";
+import { getCurrentUser } from "@/lib/auth";
 import { useToast } from "@/hooks/useToast";
 import type { Reserva, Alojamiento, Alimento, Experiencia } from "@/types";
+import { ReservaEstado } from "@/types";
 
 export default function DetalleReservaPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -22,7 +24,7 @@ export default function DetalleReservaPage({ params }: { params: { id: string } 
     const fetchData = async () => {
       try {
         // Verificar autenticación
-        const currentUser = await getUser();
+        const currentUser = await getCurrentUser();
         if (!currentUser) {
           router.push("/login");
           return;
@@ -102,7 +104,7 @@ export default function DetalleReservaPage({ params }: { params: { id: string } 
 
       const data = await res.json();
       if (data.success) {
-        setReserva({ ...reserva, estado: "cancelada" });
+        setReserva({ ...reserva, estado: ReservaEstado.CANCELADA });
         toast.success("Reserva cancelada exitosamente");
       } else {
         toast.error(data.error || "Error al cancelar la reserva");
@@ -227,10 +229,11 @@ export default function DetalleReservaPage({ params }: { params: { id: string } 
           {/* Imagen del servicio */}
           {servicio && (
             <div className="relative h-64 bg-gray-200">
-              <img
+              <Image
                 src={servicioImagen}
                 alt={servicioTitulo}
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
               />
               <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg">
                 <span className="text-2xl mr-2">{getTipoIcon(reserva.tipo_servicio)}</span>

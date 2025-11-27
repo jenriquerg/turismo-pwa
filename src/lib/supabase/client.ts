@@ -30,5 +30,9 @@ class SupabaseClientSingleton {
   }
 }
 
-export const supabase = SupabaseClientSingleton.getInstance();
+// Helper function to get the Supabase client instance
+export function getSupabaseClient(): SupabaseClient {
+  return SupabaseClientSingleton.getInstance();
+}
+
 export { SupabaseClientSingleton };

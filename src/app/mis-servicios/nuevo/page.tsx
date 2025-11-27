@@ -39,7 +39,7 @@ export default function NuevoServicioPage() {
     }
 
     loadData();
-  }, [router]);
+  }, [router, toast]);
 
   const handleSubmit = async (data: Record<string, unknown>) => {
     if (!user || !selectedType) return;

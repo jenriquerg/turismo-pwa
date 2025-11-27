@@ -86,7 +86,7 @@ export default function EditarServicioPage({ params }: { params: Promise<{ id: s
     }
 
     loadData();
-  }, [id, router]);
+  }, [id, router, toast]);
 
   const handleSubmit = async (data: Record<string, unknown>) => {
     if (!user || !serviceType) return;

@@ -38,8 +38,6 @@ export default function MisServiciosPage() {
         return;
       }
 
-      setUser(currentUser);
-
       try {
         const [alojamientosRes, alimentosRes, experienciasRes] = await Promise.all([
           fetch(`/api/alojamientos?userId=${currentUser.id}`),
@@ -70,7 +68,7 @@ export default function MisServiciosPage() {
     }
 
     loadData();
-  }, [router]);
+  }, [router, toast]);
 
   const handleToggleDisponibilidad = async (
     id: string,
