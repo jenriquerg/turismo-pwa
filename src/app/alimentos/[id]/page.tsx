@@ -248,7 +248,7 @@ export default function AlimentoDetailPage({ params }: { params: Promise<{ id: s
                     <div className="flex items-center gap-2">
                       <span className="text-2xl">🕐</span>
                       <div>
-                        <p className="text-sm text-gray-600">Horario de recogida</p>
+                        <p className="text-sm text-gray-600">Horario de recolección</p>
                         <p className="font-semibold text-gray-900">{alimento.horario_recogida}</p>
                       </div>
                     </div>

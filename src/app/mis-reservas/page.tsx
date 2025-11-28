@@ -62,7 +62,8 @@ export default function MisReservasPage() {
         filtered = reservas.filter((r) => r.estado === "cancelada");
         break;
       default:
-        filtered = reservas;
+        // "todas" excluye las canceladas
+        filtered = reservas.filter((r) => r.estado !== "cancelada");
     }
 
     setFilteredReservas(filtered);
@@ -77,7 +78,11 @@ export default function MisReservasPage() {
 
     try {
       const res = await fetch(`/api/reservas?id=${id}`, {
-        method: "DELETE",
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          estado: "cancelada",
+        }),
       });
 
       const data = await res.json();

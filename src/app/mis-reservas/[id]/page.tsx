@@ -93,11 +93,10 @@ export default function DetalleReservaPage({ params }: { params: { id: string } 
 
     setCancelando(true);
     try {
-      const res = await fetch("/api/reservas", {
-        method: "PUT",
+      const res = await fetch(`/api/reservas?id=${reserva.id}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: reserva.id,
           estado: "cancelada",
         }),
       });
@@ -350,7 +349,7 @@ export default function DetalleReservaPage({ params }: { params: { id: string } 
                   )}
                   {"horario_recogida" in servicio && servicio.horario_recogida && (
                     <div>
-                      <span className="font-medium text-gray-700">🕐 Horario de recogida:</span>
+                      <span className="font-medium text-gray-700">🕐 Horario de recolección:</span>
                       <p className="text-gray-900">{servicio.horario_recogida}</p>
                     </div>
                   )}

@@ -102,6 +102,7 @@ export default function ReservaForm({
           onChange={(e) =>
             setFormData({ ...formData, cantidad_personas: parseInt(e.target.value) || 1 })
           }
+          onFocus={(e) => e.target.select()}
           min={1}
           max={capacidadMaxima}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
