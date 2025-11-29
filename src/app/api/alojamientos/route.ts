@@ -3,6 +3,7 @@
 // ============================================
 // GET /api/alojamientos - Obtener todos los alojamientos
 // GET /api/alojamientos?id=xxx - Obtener alojamiento por ID
+// GET /api/alojamientos?userId=xxx - Por proveedor
 // POST /api/alojamientos - Crear nuevo alojamiento
 // PUT /api/alojamientos?id=xxx - Actualizar alojamiento
 // DELETE /api/alojamientos?id=xxx - Eliminar alojamiento
@@ -19,6 +20,7 @@ export async function GET(request: NextRequest) {
   const ubicacion = searchParams.get('ubicacion');
   const capacidad = searchParams.get('capacidad');
   const disponible = searchParams.get('disponible');
+  const userId = searchParams.get('userId');
 
   // Obtener por ID
   if (id) {
@@ -26,6 +28,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(result, {
       status: result.success ? 200 : 404
     });
+  }
+
+  // Obtener por proveedor
+  if (userId) {
+    const result = await controller.getByProveedor(userId);
+    return NextResponse.json(result);
   }
 
   // Buscar por ubicación

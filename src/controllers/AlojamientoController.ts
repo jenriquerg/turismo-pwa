@@ -175,4 +175,23 @@ export class AlojamientoController {
       };
     }
   }
+
+  /**
+   * Obtener alojamientos por proveedor
+   */
+  async getByProveedor(userId: string): Promise<ApiResponse<Alojamiento[]>> {
+    try {
+      const alojamientos = await this.repository.findByUserId(userId);
+      return {
+        success: true,
+        data: alojamientos,
+        message: 'Alojamientos del proveedor obtenidos exitosamente',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Error al obtener alojamientos',
+      };
+    }
+  }
 }

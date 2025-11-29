@@ -49,7 +49,7 @@ export default function DashboardPage() {
             fetch(`/api/alimentos?userId=${currentUser.id}`),
             fetch(`/api/experiencias?userId=${currentUser.id}`),
             fetch(`/api/reservas?userId=${currentUser.id}&activas=true`),
-            fetch(`/api/resenas?providerId=${currentUser.id}`),
+            fetch(`/api/resenas?userId=${currentUser.id}`),
           ]);
 
           const alojamientosData = await alojamientosRes.json();
