@@ -48,7 +48,7 @@ export default function DashboardPage() {
             fetch(`/api/alojamientos?userId=${currentUser.id}`),
             fetch(`/api/alimentos?userId=${currentUser.id}`),
             fetch(`/api/experiencias?userId=${currentUser.id}`),
-            fetch(`/api/reservas?userId=${currentUser.id}&activas=true`),
+            fetch(`/api/reservas?proveedorId=${currentUser.id}&activas=true`),
             fetch(`/api/resenas?userId=${currentUser.id}`),
           ]);
 

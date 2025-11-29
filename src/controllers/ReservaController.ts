@@ -152,4 +152,42 @@ export class ReservaController {
       };
     }
   }
+
+  /**
+   * Obtener reservas de los servicios de un proveedor
+   */
+  async getByProveedorId(proveedorId: string): Promise<ApiResponse<Reserva[]>> {
+    try {
+      const reservas = await this.repository.findByProveedorId(proveedorId);
+      return {
+        success: true,
+        data: reservas,
+        message: 'Reservas del proveedor obtenidas exitosamente',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Error al obtener reservas del proveedor',
+      };
+    }
+  }
+
+  /**
+   * Obtener reservas activas de los servicios de un proveedor
+   */
+  async getActivasByProveedorId(proveedorId: string): Promise<ApiResponse<Reserva[]>> {
+    try {
+      const reservas = await this.repository.findActivasByProveedorId(proveedorId);
+      return {
+        success: true,
+        data: reservas,
+        message: 'Reservas activas del proveedor obtenidas exitosamente',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Error al obtener reservas activas del proveedor',
+      };
+    }
+  }
 }

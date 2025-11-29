@@ -1,7 +1,8 @@
 // ============================================
 // API ROUTE - Reservas
 // ============================================
-// GET /api/reservas?userId=xxx - Obtener reservas de un usuario
+// GET /api/reservas?userId=xxx - Obtener reservas de un usuario (turista)
+// GET /api/reservas?proveedorId=xxx - Obtener reservas de servicios de un proveedor
 // GET /api/reservas?id=xxx - Obtener reserva por ID
 // POST /api/reservas - Crear nueva reserva
 // PATCH /api/reservas?id=xxx - Actualizar estado de reserva
@@ -18,6 +19,7 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const id = searchParams.get('id');
   const userId = searchParams.get('userId');
+  const proveedorId = searchParams.get('proveedorId');
   const activas = searchParams.get('activas');
 
   // Obtener por ID
@@ -28,22 +30,30 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  if (!userId) {
-    return NextResponse.json(
-      { success: false, error: 'Se requiere el parámetro userId o id' },
-      { status: 400 }
-    );
-  }
-
-  // Obtener solo reservas activas
-  if (activas === 'true') {
-    const result = await controller.getActivasByUserId(userId);
+  // Obtener reservas de servicios de un proveedor
+  if (proveedorId) {
+    if (activas === 'true') {
+      const result = await controller.getActivasByProveedorId(proveedorId);
+      return NextResponse.json(result);
+    }
+    const result = await controller.getByProveedorId(proveedorId);
     return NextResponse.json(result);
   }
 
-  // Obtener todas las reservas del usuario
-  const result = await controller.getByUserId(userId);
-  return NextResponse.json(result);
+  // Obtener reservas de un usuario (turista)
+  if (userId) {
+    if (activas === 'true') {
+      const result = await controller.getActivasByUserId(userId);
+      return NextResponse.json(result);
+    }
+    const result = await controller.getByUserId(userId);
+    return NextResponse.json(result);
+  }
+
+  return NextResponse.json(
+    { success: false, error: 'Se requiere el parámetro userId, proveedorId o id' },
+    { status: 400 }
+  );
 }
 
 export async function POST(request: NextRequest) {
