@@ -31,7 +31,16 @@ export default function MisReservasPage() {
       setUser(currentUser);
 
       try {
-        const res = await fetch(`/api/reservas?userId=${currentUser.id}`);
+        // Detectar tipo de usuario
+        const userType = currentUser.user_metadata?.user_type || "turista";
+
+        // Si es proveedor, obtener reservas de sus servicios
+        // Si es turista, obtener sus propias reservas
+        const endpoint = userType === "proveedor"
+          ? `/api/reservas?proveedorId=${currentUser.id}`
+          : `/api/reservas?userId=${currentUser.id}`;
+
+        const res = await fetch(endpoint);
         const data = await res.json();
 
         if (data.success) {
@@ -89,7 +98,12 @@ export default function MisReservasPage() {
 
       if (data.success) {
         // Actualizar la lista de reservas
-        const updatedRes = await fetch(`/api/reservas?userId=${user.id}`);
+        const userType = user.user_metadata?.user_type || "turista";
+        const endpoint = userType === "proveedor"
+          ? `/api/reservas?proveedorId=${user.id}`
+          : `/api/reservas?userId=${user.id}`;
+
+        const updatedRes = await fetch(endpoint);
         const updatedData = await updatedRes.json();
 
         if (updatedData.success) {
