@@ -69,10 +69,29 @@ export class ReservaRepository extends BaseRepository<Reserva> {
    * Obtener reservas de los servicios de un proveedor
    */
   async findByProveedorId(proveedorId: string): Promise<Reserva[]> {
+    // Paso 1: Obtener IDs de todos los servicios del proveedor
+    const [alojamientosRes, alimentosRes, experienciasRes] = await Promise.all([
+      this.supabase.from('alojamientos').select('id').eq('user_id', proveedorId),
+      this.supabase.from('alimentos').select('id').eq('user_id', proveedorId),
+      this.supabase.from('experiencias').select('id').eq('user_id', proveedorId),
+    ]);
+
+    const servicioIds: string[] = [
+      ...(alojamientosRes.data || []).map(a => a.id),
+      ...(alimentosRes.data || []).map(a => a.id),
+      ...(experienciasRes.data || []).map(e => e.id),
+    ];
+
+    // Si no tiene servicios, retornar array vacío
+    if (servicioIds.length === 0) {
+      return [];
+    }
+
+    // Paso 2: Obtener reservas de esos servicios
     const { data, error } = await this.supabase
       .from(this.tableName)
       .select('*')
-      .or(`servicio_id.in.(select id from alojamientos where user_id.eq.${proveedorId}),servicio_id.in.(select id from alimentos where user_id.eq.${proveedorId}),servicio_id.in.(select id from experiencias where user_id.eq.${proveedorId})`)
+      .in('servicio_id', servicioIds)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -86,10 +105,29 @@ export class ReservaRepository extends BaseRepository<Reserva> {
    * Obtener reservas activas de los servicios de un proveedor
    */
   async findActivasByProveedorId(proveedorId: string): Promise<Reserva[]> {
+    // Paso 1: Obtener IDs de todos los servicios del proveedor
+    const [alojamientosRes, alimentosRes, experienciasRes] = await Promise.all([
+      this.supabase.from('alojamientos').select('id').eq('user_id', proveedorId),
+      this.supabase.from('alimentos').select('id').eq('user_id', proveedorId),
+      this.supabase.from('experiencias').select('id').eq('user_id', proveedorId),
+    ]);
+
+    const servicioIds: string[] = [
+      ...(alojamientosRes.data || []).map(a => a.id),
+      ...(alimentosRes.data || []).map(a => a.id),
+      ...(experienciasRes.data || []).map(e => e.id),
+    ];
+
+    // Si no tiene servicios, retornar array vacío
+    if (servicioIds.length === 0) {
+      return [];
+    }
+
+    // Paso 2: Obtener reservas activas de esos servicios
     const { data, error } = await this.supabase
       .from(this.tableName)
       .select('*')
-      .or(`servicio_id.in.(select id from alojamientos where user_id.eq.${proveedorId}),servicio_id.in.(select id from alimentos where user_id.eq.${proveedorId}),servicio_id.in.(select id from experiencias where user_id.eq.${proveedorId})`)
+      .in('servicio_id', servicioIds)
       .in('estado', ['pendiente', 'confirmada', 'pagada'])
       .order('fecha_inicio', { ascending: true });
 
