@@ -35,7 +35,7 @@ export default function LoginPage() {
           {/* Header */}
           <div className="text-center space-y-2">
             <h1 className="text-3xl font-bold text-gray-900">Iniciar Sesión</h1>
-            <p className="text-gray-600">Bienvenido de vuelta</p>
+            <p className="text-gray-600">Bienvenido de vueltaaaa</p>
           </div>
 
           {/* Error Message */}
